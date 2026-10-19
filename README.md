@@ -63,8 +63,22 @@
 | PUT | `/api/state` | 更新应用状态 |
 | POST | `/api/upload` | 上传图片 |
 | GET | `/api/files/...` | 访问图片 |
+| GET | `/api/hot` | 热榜聚合（抖音 + 小红书，免登录）|
+| GET | `/api/hot/douyin` | 抖音热榜 |
+| GET | `/api/hot/xiaohongshu` | 小红书热门 |
 
 所有 `/api/diaries`、`/api/state`、`/api/upload` 需要 `Authorization: Bearer <token>`。
+
+### 热榜接口
+
+`/api/hot*` 是**公开只读**接口（未登录也能看），服务端代理第三方聚合源并缓存 10 分钟：
+
+- 上游全部失败时回吐上次成功缓存并置 `stale: true`，前端继续展示旧数据而不是空白
+- 加 `?force=1` 强制刷新，同一平台 30 秒内最多触发一次
+- 返回字段：`rank / title / hot / hotText / url / pic / label`，`url` 是抖音/小红书官方页链接，前端直接 `target="_blank"` 跳转
+- 无需任何 API Key
+
+对应的技能包：`~/.workbuddy/skills/douyin-hot/`（含 `scripts/fetch_douyin_hot.py` 命令行抓取）。
 
 ## 环境变量
 

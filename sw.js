@@ -1,7 +1,7 @@
 /* WorkBuddy 咕嘎管家 — Service Worker
    提供应用外壳离线缓存，使网页在鸿蒙/手机上以 APP 形式离线可用 */
 
-const CACHE = 'wla-cache-v21';
+const CACHE = 'wla-cache-v22';
 const APP_SHELL = [
   '.',
   'index.html',

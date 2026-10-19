@@ -21,3 +21,7 @@ server/uploads/*
 .workbuddy/
 .genie
 .wbapp_*.genie
+
+# 本地临时验证文件
+.tmp-*
+.tmp_*

@@ -4,6 +4,7 @@ import 'dotenv/config';
 import authRouter from './auth.js';
 import dataRouter from './data.js';
 import filesRouter from './files.js';
+import hotRouter from './hot.js';
 
 const app = express();
 const PORT = Number(process.env.PORT || 3000);
@@ -17,6 +18,7 @@ app.get('/api/health', (req, res) => {
 });
 
 app.use('/api/auth', authRouter);
+app.use('/api', hotRouter);
 app.use('/api', dataRouter);
 app.use('/api', filesRouter);
 

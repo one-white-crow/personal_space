@@ -1143,6 +1143,25 @@ body {
 .hot-hero-title { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.01em; position: relative; }
 .hot-hero-sub { font-size: 0.86rem; opacity: 0.92; margin-top: 4px; position: relative; }
 .hot-hero-meta { font-size: 0.78rem; opacity: 0.85; position: relative; text-align: right; }
+.hot-hero-right { position: relative; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.hot-refresh-btn {
+  padding: 7px 14px; border-radius: 999px; cursor: pointer;
+  font-family: inherit; font-size: 0.78rem; font-weight: 600;
+  color: #fff; background: rgba(255,255,255,0.18);
+  border: 1px solid rgba(255,255,255,0.38);
+  transition: background 0.2s ease, transform 0.15s ease;
+}
+.hot-refresh-btn:hover { background: rgba(255,255,255,0.32); }
+.hot-refresh-btn:active { transform: scale(0.96); }
+.hot-refresh-btn:disabled { opacity: 0.55; cursor: default; transform: none; }
+.hot-src-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 8px; border-radius: 999px;
+  font-size: 0.68rem; font-weight: 600; letter-spacing: 0.01em;
+  background: var(--hot-bg); color: var(--hot);
+  border: 1px solid var(--hot-soft);
+}
+.hot-row-title a { display: block; line-height: 1.45; }
 .hot-brief { padding: 6px 0; }
 .hot-brief-tag {
   display: inline-flex; align-items: center; gap: 5px;
@@ -1152,6 +1171,19 @@ body {
   font-size: 0.82rem; font-weight: 600; cursor: default;
 }
 .hot-brief-note { font-size: 0.76rem; color: var(--text-3); line-height: 1.6; margin-top: 6px; padding-top: 10px; border-top: 1px dashed var(--border-strong); }
+.hot-brief-group + .hot-brief-group { margin-top: 14px; padding-top: 14px; border-top: 1px dashed var(--border-strong); }
+.hot-brief-label { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.05em; color: var(--text-3); margin-bottom: 8px; }
+.hot-brief-item {
+  display: flex; gap: 8px; align-items: baseline;
+  font-size: 0.85rem; line-height: 1.5; padding: 5px 0;
+}
+.hot-brief-item .n {
+  flex-shrink: 0; width: 14px;
+  font-weight: 700; color: var(--hot);
+  font-variant-numeric: tabular-nums;
+}
+.hot-brief-item a { color: var(--text-1); text-decoration: none; }
+.hot-brief-item a:hover { color: var(--hot); text-decoration: underline; }
 .hot-list { padding: 8px 24px 16px; }
 .hot-row {
   display: flex; align-items: center; gap: 12px;
@@ -1886,7 +1918,10 @@ figure.dimg.selected img { outline: 3px solid var(--health); outline-offset: 2px
         <div class="hot-hero-title">今日热点日报</div>
         <div class="hot-hero-sub">抖音热榜 × 小红书热门，一站看尽今天在聊什么 🔥</div>
       </div>
-      <div class="hot-hero-meta" id="hotUpdated"></div>
+      <div class="hot-hero-right">
+        <div class="hot-hero-meta" id="hotUpdated"></div>
+        <button class="hot-refresh-btn" id="hotRefreshBtn" onclick="loadHotDaily(true)">🔄 刷新</button>
+      </div>
     </div>
     <div class="module-layout">
       <div class="sticky-col">
@@ -2195,7 +2230,7 @@ document.querySelectorAll('.nav-item').forEach(btn => {
     document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
     document.getElementById('view-' + tab).classList.add('active');
     if (tab === 'ai') fetchAIHot(); // 切到 AI 标签时自动获取当日热点
-    if (tab === 'hot') renderHotDaily(); // 切到热点日报时刷新
+    if (tab === 'hot') loadHotDaily(); // 切到热点日报时拉取实时热榜
   });
 });
 
@@ -3470,75 +3505,138 @@ function renderAIDaily(items) {
   if (sub) sub.textContent = `今日 AI 大事速览 · ${fmtCacheTime(Date.now())} 更新 · 点击标题直达原文`;
 }
 
-/* ===== 热点日报：抖音热榜 + 小红书热门（示例数据占位，待接入真实数据源） ===== */
-const HOT_CACHE_KEY = 'hot_daily';
-const HOT_SAMPLE = {
-  fetchedAt: null,
-  isSample: true,
-  summary: ['AI 智能体', '具身智能', 'AI 视频生成', '消费电子', '大模型应用'],
-  douyin: [
-    { title: 'AI 数字人直播带货又火了', heat: '982.4w' },
-    { title: '大模型让打工人效率翻倍', heat: '876.1w' },
-    { title: '具身智能机器人走进生活', heat: '743.5w' },
-    { title: 'AI 生成视频冲上热搜', heat: '689.2w' },
-    { title: '国产大模型新突破', heat: '602.8w' },
-    { title: 'AI 写代码神器实测', heat: '521.7w' }
-  ],
-  xhs: [
-    { title: '打工人必备的 5 个 AI 提效工具，效率翻倍', author: '效率研究所', likes: '8.6w' },
-    { title: 'AI 一键生成 PPT，从此告别熬夜做汇报', author: '职场成长社', likes: '7.2w' },
-    { title: '用 AI 做副业月入过万的真实经历', author: '搞钱小分队', likes: '6.8w' },
-    { title: 'ChatGPT 写论文保姆级教程', author: '学霸笔记', likes: '5.9w' },
-    { title: 'AI 修图太强了，小白也能出大片', author: '摄影日记', likes: '5.3w' },
-    { title: '普通人如何抓住 AI 风口', author: '趋势观察', likes: '4.8w' }
-  ]
-};
+/* ===== 热点日报：抖音热榜 + 小红书热门（后端 /api/hot 实时聚合，免 API Key） ===== */
+const HOT_CACHE_KEY = 'hot_cache';
+const HOT_TOP_N = 10;
+
+function escapeAttr(str) {
+  return String(str == null ? '' : str)
+    .replace(/&/g, '&amp;').replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+// 榜单行（标题可点击跳转原文）
+function hotRowHtml(items, icon) {
+  if (!items || !items.length) {
+    return `<div class="empty-state"><div class="empty-icon">${icon}</div>暂无数据</div>`;
+  }
+  return items.map((it, i) => {
+    const label = escapeHtml(it.title || '');
+    const title = /^https?:\/\//i.test(it.url || '')
+      ? `<a href="${escapeAttr(it.url)}" target="_blank" rel="noopener noreferrer">${label}</a>`
+      : label;
+    const heat = it.hotText
+      ? `<span class="hot-row-heat">${icon === '📕' ? '❤️' : '🔥'} ${escapeHtml(it.hotText)}</span>`
+      : '';
+    return `<div class="hot-row">
+      <span class="hot-rank">${i + 1}</span>
+      <span class="hot-row-title">${title}</span>
+      ${heat}
+    </div>`;
+  }).join('');
+}
+
+// 左栏「今日速览」：两榜 TOP3 对照
+function hotBriefGroup(label, items) {
+  if (!items || !items.length) return '';
+  const rows = items.slice(0, 3).map((it, i) => {
+    const t = escapeHtml(it.title || '');
+    const inner = /^https?:\/\//i.test(it.url || '')
+      ? `<a href="${escapeAttr(it.url)}" target="_blank" rel="noopener noreferrer">${t}</a>`
+      : t;
+    return `<div class="hot-brief-item"><span class="n">${i + 1}</span><span>${inner}</span></div>`;
+  }).join('');
+  return `<div class="hot-brief-group"><div class="hot-brief-label">${label}</div>${rows}</div>`;
+}
 
 function renderHotDaily() {
-  const data = getData(HOT_CACHE_KEY);
-  const d = (data && (data.douyin || data.xhs)) ? data : HOT_SAMPLE;
-  const isSample = !data || d.isSample;
+  const cache = getObject(HOT_CACHE_KEY);
+  const douyin = Array.isArray(cache.douyin) ? cache.douyin : [];
+  const xhs = Array.isArray(cache.xhs) ? cache.xhs : [];
+  const hasData = douyin.length > 0 || xhs.length > 0;
 
-  // 更新 meta
+  // 顶部更新状态
   const meta = document.getElementById('hotUpdated');
-  if (meta) meta.textContent = isSample
-    ? '示例数据 · 待接入真实数据源'
-    : '更新于 ' + fmtCacheTime(d.fetchedAt || Date.now());
+  if (meta) {
+    if (!hasData) meta.textContent = '正在获取实时热榜…';
+    else meta.textContent = (cache.stale ? '缓存数据 · ' : '更新于 ') + fmtCacheTime(cache.fetchedAt || Date.now());
+  }
 
   // 今日速览
   const brief = document.getElementById('hotBrief');
   if (brief) {
-    const tags = (d.summary || []).map(s => `<span class="hot-brief-tag">#${escapeHtml(s)}</span>`).join('');
-    brief.innerHTML = tags + `<div class="hot-brief-note">${isSample
-      ? '当前为示例占位数据：接入抖音（需 GUAIKEI_API_TOKEN）与小红书（需 REDFOX_API_KEY）后自动替换为真实热点。'
-      : '聚合自抖音热榜与小红书热门笔记，仅供内部分析参考。'}</div>`;
+    if (!hasData) {
+      brief.innerHTML = `<div class="hot-brief-note" style="border-top:none;padding-top:0">正在从抖音、小红书获取今日热点…</div>`;
+    } else {
+      brief.innerHTML =
+        hotBriefGroup('🎵 抖音 TOP3', douyin) +
+        hotBriefGroup('📕 小红书 TOP3', xhs) +
+        `<div class="hot-brief-note">两榜实时聚合，点击任意标题可跳转原文${
+          cache.stale ? '；上游当前波动，展示的是上次成功抓取的缓存' : ''
+        }。</div>`;
+    }
   }
 
-  // 抖音热榜
   const dy = document.getElementById('douyinHotList');
-  if (dy) {
-    dy.innerHTML = (d.douyin || []).map((it, i) => `<div class="hot-row">
-      <span class="hot-rank">${i + 1}</span>
-      <span class="hot-row-title">${escapeHtml(it.title)}</span>
-      ${it.heat ? `<span class="hot-row-heat">🔥 ${escapeHtml(String(it.heat))}</span>` : ''}
-    </div>`).join('') || `<div class="empty-state"><div class="empty-icon">🎵</div>暂无数据</div>`;
-  }
+  if (dy) dy.innerHTML = hotRowHtml(douyin, '🎵');
 
-  // 小红书热门
-  const xhs = document.getElementById('xhsHotList');
-  if (xhs) {
-    xhs.innerHTML = (d.xhs || []).map((it, i) => `<div class="hot-row">
-      <span class="hot-rank">${i + 1}</span>
-      <span class="hot-row-title">${escapeHtml(it.title)}</span>
-      ${it.author ? `<span class="src-tag">@${escapeHtml(it.author)}</span>` : ''}
-      ${it.likes ? `<span class="hot-row-heat">❤️ ${escapeHtml(String(it.likes))}</span>` : ''}
-    </div>`).join('') || `<div class="empty-state"><div class="empty-icon">📕</div>暂无数据</div>`;
-  }
+  const xhsEl = document.getElementById('xhsHotList');
+  if (xhsEl) xhsEl.innerHTML = hotRowHtml(xhs, '📕');
 
-  // 底部说明
   const attrib = document.getElementById('hotAttrib');
-  if (attrib) attrib.innerHTML = `数据来源：抖音热榜 · 小红书热门笔记${isSample ? '（当前为示例占位）' : ''} · 数据为公开资讯，引用请以原文为准`;
+  if (attrib) attrib.innerHTML = hasData
+    ? '数据来源：抖音热榜 · 小红书热门（第三方聚合，经自建后端缓存 10 分钟）· 一切以原文为准'
+    : '数据来源：抖音热榜 · 小红书热门';
 }
+
+// 从后端拉取实时热榜；失败时保留本地缓存继续展示
+let hotLoading = false;
+async function loadHotDaily(force = false) {
+  // 非强制刷新时，本地缓存 2 分钟内直接复用，避免每次切标签都打后端
+  if (!force) {
+    const c = getObject(HOT_CACHE_KEY);
+    if (c.fetchedAt && Date.now() - c.fetchedAt < 2 * 60 * 1000) { renderHotDaily(); return; }
+  }
+  if (hotLoading) return;
+  hotLoading = true;
+  const btn = document.getElementById('hotRefreshBtn');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ 抓取中…'; }
+
+  try {
+    const resp = await fetch('/api/hot' + (force ? '?force=1' : ''), {
+      headers: { Accept: 'application/json' },
+      cache: 'no-store'
+    });
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    const json = await resp.json();
+    const douyin = ((json.douyin && json.douyin.items) || []).slice(0, HOT_TOP_N);
+    const xhs = ((json.xiaohongshu && json.xiaohongshu.items) || []).slice(0, HOT_TOP_N);
+    if (!douyin.length && !xhs.length) throw new Error('热榜返回为空');
+
+    saveObject(HOT_CACHE_KEY, {
+      fetchedAt: Date.now(),
+      stale: !!(json.douyin && json.douyin.stale) || !!(json.xiaohongshu && json.xiaohongshu.stale),
+      source: (json.douyin && json.douyin.source) || '',
+      douyin,
+      xhs
+    });
+    renderHotDaily();
+    if (force) showToast('热榜已刷新 ✓');
+  } catch (e) {
+    console.warn('[hot] 拉取失败：', e && e.message);
+    const cache = getObject(HOT_CACHE_KEY);
+    const hasCache = (cache.douyin && cache.douyin.length) || (cache.xhs && cache.xhs.length);
+    if (!hasCache) {
+      const meta = document.getElementById('hotUpdated');
+      if (meta) meta.textContent = '热榜源暂时不可用，请稍后再试';
+    }
+    if (force) showToast('刷新失败，请稍后再试');
+  } finally {
+    hotLoading = false;
+    if (btn) { btn.disabled = false; btn.textContent = '🔄 刷新'; }
+  }
+}
+
 
 function copyNews(i, btn) {
   const it = window._aiNews && window._aiNews[i];
@@ -3654,14 +3752,15 @@ function init() {
   renderCollection();
   fetchAIHot();
 
-  // 热点日报：示例数据占位，接入真实数据源后自动替换
+  // 热点日报：先渲染本地缓存（有则秒开），再静默拉取实时热榜
   renderHotDaily();
+  loadHotDaily();
 }
 
 init();
 
 /* ===== 云端账号与同步 ===== */
-const SYNC_EXCLUDE = /^aihot_|^cloud_deleted$/;
+const SYNC_EXCLUDE = /^aihot_|^hot_|^cloud_deleted$/;
 
 function updateAccountUI(session) {
   const pairs = [
