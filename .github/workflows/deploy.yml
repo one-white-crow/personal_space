@@ -57,6 +57,14 @@ jobs:
           port: ${{ secrets.SERVER_PORT || 22 }}
           script: |
             set -e
+
+            # 0) 首次部署：目录不存在则自动创建并克隆仓库
+            if [ ! -d /opt/guga/.git ]; then
+              echo "首次部署，初始化 /opt/guga ..."
+              mkdir -p /opt/guga
+              git clone https://github.com/one-white-crow/personal_space.git /opt/guga
+            fi
+
             cd /opt/guga
 
             # 1) 增量拉取代码（git 只传输变化的对象；前端静态资源由 nginx 直接读取，立即生效）
