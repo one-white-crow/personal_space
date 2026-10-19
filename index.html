@@ -1944,7 +1944,7 @@ figure.dimg.selected img { outline: 3px solid var(--health); outline-offset: 2px
         <div class="card">
           <div class="card-header">
             <div class="card-title">📕 小红书热门</div>
-            <div class="card-subtitle">互动 1000+ 的爆款笔记</div>
+            <div class="card-subtitle">实时热搜话题</div>
           </div>
           <div class="hot-list" id="xhsHotList"></div>
         </div>
@@ -3621,7 +3621,11 @@ async function loadHotDaily(force = false) {
       xhs
     });
     renderHotDaily();
-    if (force) showToast('热榜已刷新 ✓');
+    if (force) {
+      const saved = getObject(HOT_CACHE_KEY);
+      const hhmmss = new Date().toLocaleTimeString('zh-CN', { hour12: false });
+      showToast(saved.stale ? '上游波动，已展示缓存数据' : `热榜已刷新 · ${hhmmss}`);
+    }
   } catch (e) {
     console.warn('[hot] 拉取失败：', e && e.message);
     const cache = getObject(HOT_CACHE_KEY);
