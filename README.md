@@ -91,16 +91,16 @@ git push -u origin main
 
 ### 2. 服务器首次准备（一次性）
 
-在服务器上装好 Docker + Docker Compose，然后：
+只需装好 Docker（含 Compose 插件）和 rsync，**不需要 clone 仓库**——CI 会用 rsync 把代码直接推过去：
 
 ```bash
-sudo apt update && sudo apt install -y git docker.io docker-compose-plugin
-mkdir -p /opt/guga
-cd /opt/guga
-git clone git@github.com:<你的用户名>/guga-housekeeper.git .
+sudo apt update && sudo apt install -y git curl rsync
+curl -fsSL https://get.docker.com | bash -s -- --mirror Aliyun
+sudo systemctl enable --now docker
+docker compose version
 ```
 
-> 服务器需配置 SSH 免密拉取（为服务器生成 SSH key 并加到 GitHub Deploy Keys，或使用 GitHub 账号的 PAT）。
+> 服务器无需访问 GitHub（避免国内网络导致的 TLS 中断），代码由 GitHub Actions 主动推送。
 
 ### 3. 配置 GitHub Secrets
 
@@ -123,8 +123,8 @@ git clone git@github.com:<你的用户名>/guga-housekeeper.git .
 部署采用**增量方式**，只处理改动过的部分：
 
 1. **构建**（在 GitHub Actions 完成）：用 layer cache 构建后端镜像，只重建代码改动影响的层，推送到 GHCR（`ghcr.io/one-white-crow/personal_space-backend`）。
-2. **部署**（SSH 到服务器）：
-   - `git fetch` + `git reset` —— git 只传输变化的对象；
+2. **部署**（CI 推送到服务器，服务器无需访问 GitHub）：
+   - `rsync` 增量同步代码（只传变化的文件；`.env`、`uploads/` 等被排除保护）；
    - `docker compose pull backend` —— Docker 只下载镜像中变化的层，未变化的层复用本地缓存；
    - `docker compose up -d --no-build` —— 只重启有变化的服务，db / nginx 保持不变。
 
