@@ -19,7 +19,11 @@ services:
       retries: 10
 
   backend:
-    build: ./server
+    # 生产环境从 GitHub Container Registry 拉取（CI 已构建好，服务器只增量拉取变化的层）
+    image: ghcr.io/one-white-crow/personal_space-backend:latest
+    # 本地开发时可用 build（docker compose up --build）；生产部署用 --no-build + pull
+    build:
+      context: ./server
     restart: unless-stopped
     environment:
       PORT: "3000"

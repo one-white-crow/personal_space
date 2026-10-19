@@ -120,7 +120,25 @@ git clone git@github.com:<你的用户名>/guga-housekeeper.git .
 
 推送代码到 `main` 分支即自动部署，或在 Actions 页面手动点 **Run workflow**。
 
-部署脚本会：拉取最新代码 → 写入 `.env` → `docker compose up -d --build` → 清理旧镜像。
+部署采用**增量方式**，只处理改动过的部分：
+
+1. **构建**（在 GitHub Actions 完成）：用 layer cache 构建后端镜像，只重建代码改动影响的层，推送到 GHCR（`ghcr.io/one-white-crow/personal_space-backend`）。
+2. **部署**（SSH 到服务器）：
+   - `git fetch` + `git reset` —— git 只传输变化的对象；
+   - `docker compose pull backend` —— Docker 只下载镜像中变化的层，未变化的层复用本地缓存；
+   - `docker compose up -d --no-build` —— 只重启有变化的服务，db / nginx 保持不变。
+
+**各类改动的实际影响**：
+
+| 改动内容 | 部署行为 |
+|---|---|
+| 前端（`index.html` / `sw.js` / 图标） | 只更新静态文件，nginx 直接读取，不重建镜像、不重启容器 |
+| 后端代码（`server/src`） | 只重建镜像最后几层，pull 变化层并重启 backend |
+| `server/package.json`（依赖） | 才重新执行 `npm install` |
+| 数据库 / nginx 配置 | 数据卷持久化，容器保持不变 |
+
+> 提示：GHCR 镜像默认继承仓库可见性。如果仓库是 Public，镜像通常也是 Public，服务器可直接 pull；若为 Private，workflow 已用 `GITHUB_TOKEN` 自动登录，无需额外配置。
+
 
 ### 5. 访问
 
