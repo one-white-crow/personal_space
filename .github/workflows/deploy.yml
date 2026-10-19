@@ -40,7 +40,7 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-  # 2) 到服务器上做增量部署
+  # 2) 部署：由 CI 主动把代码 rsync 到服务器（服务器无需访问 GitHub）
   deploy:
     needs: build
     runs-on: ubuntu-latest
@@ -48,6 +48,36 @@ jobs:
       contents: read
       packages: read
     steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 准备 SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SERVER_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts 2>/dev/null || true
+
+      - name: 确保服务器有 rsync
+        run: |
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no -p ${{ secrets.SERVER_PORT || 22 }} \
+            ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} \
+            "command -v rsync >/dev/null 2>&1 || (apt-get update && apt-get install -y rsync)"
+
+      - name: 增量同步代码到服务器（rsync）
+        run: |
+          rsync -avz --delete \
+            --exclude='.git/' \
+            --exclude='.github/' \
+            --exclude='node_modules/' \
+            --exclude='.workbuddy/' \
+            --exclude='.env' \
+            --exclude='dist/' \
+            --exclude='server/uploads/' \
+            --exclude='.wbapp_*.genie' \
+            -e "ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no -p ${{ secrets.SERVER_PORT || 22 }}" \
+            ./ ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/opt/guga/
+
       - name: 通过 SSH 部署
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -59,21 +89,9 @@ jobs:
           command_timeout: 60m
           script: |
             set -e
-
-            # 0) 首次部署：目录不存在则自动创建并克隆仓库
-            if [ ! -d /opt/guga/.git ]; then
-              echo "首次部署，初始化 /opt/guga ..."
-              mkdir -p /opt/guga
-              git clone https://github.com/one-white-crow/personal_space.git /opt/guga
-            fi
-
             cd /opt/guga
 
-            # 1) 增量拉取代码（git 只传输变化的对象；前端静态资源由 nginx 直接读取，立即生效）
-            git fetch origin
-            git reset --hard origin/main
-
-            # 2) 写入环境变量（不提交到仓库）
+            # 1) 写入环境变量（不提交到仓库；rsync 已排除，不会被覆盖）
             cat > .env <<EOF
             PGPASSWORD=${{ secrets.PGPASSWORD }}
             JWT_SECRET=${{ secrets.JWT_SECRET }}
@@ -84,14 +102,14 @@ jobs:
             SMTP_FROM=${{ secrets.SMTP_FROM }}
             EOF
 
-            # 3) 登录 GHCR，只拉取 backend 镜像中变化的层（未变化的层复用本地缓存）
+            # 2) 登录 GHCR，只拉取 backend 镜像中变化的层（未变化的层复用本地缓存）
             echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
             docker compose pull backend
 
-            # 4) 只重启有变化的服务：--no-build 使用拉取的镜像；db/nginx 未变则保持运行
+            # 3) 只重启有变化的服务：--no-build 使用拉取的镜像；db/nginx 未变则保持运行
             docker compose up -d --no-build --remove-orphans
 
-            # 5) 清理悬空镜像（不影响运行中的容器）
+            # 4) 清理悬空镜像（不影响运行中的容器）
             docker image prune -f
 
             echo "✅ 部署完成"
