@@ -1,0 +1,4084 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=5.0">
+<meta name="theme-color" content="#C9783E">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<title>咕嘎管家</title>
+<style>
+/* ===== Reset & Base ===== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #F4EFE7;
+  --bg-warm: #EDE6D9;
+  --surface: #FFFFFF;
+  --surface-alt: #FBF8F3;
+  --text: #2A2723;
+  --text-2: #6B6259;
+  --text-3: #A39B91;
+  --border: rgba(42, 39, 35, 0.08);
+  --border-strong: rgba(42, 39, 35, 0.15);
+  --shadow-sm: 0 1px 3px rgba(42, 39, 35, 0.06), 0 1px 2px rgba(42, 39, 35, 0.04);
+  --shadow-md: 0 4px 16px rgba(42, 39, 35, 0.08), 0 2px 6px rgba(42, 39, 35, 0.05);
+  --shadow-lg: 0 12px 40px rgba(42, 39, 35, 0.10), 0 4px 12px rgba(42, 39, 35, 0.06);
+
+  --time: #C9783E;
+  --time-soft: #F4DBC4;
+  --time-bg: #FDF6EF;
+  --work: #3A6B7B;
+  --work-soft: #C5D9DF;
+  --work-bg: #F0F6F8;
+  --schedule: #3A6B7B;
+  --schedule-soft: #C5D9DF;
+  --schedule-bg: #F0F6F8;
+  --hot: #E0554E;
+  --hot-soft: #F7D4D1;
+  --hot-bg: #FDF1F0;
+  --health: #6B8E5A;
+  --health-soft: #CFDDBE;
+  --health-bg: #F3F7EF;
+
+  --radius: 16px;
+  --radius-sm: 10px;
+  --radius-xs: 6px;
+  --sidebar: 244px;
+  --serif: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', 'Noto Sans SC', sans-serif;
+  --sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', 'Noto Sans SC', sans-serif;
+}
+
+html { font-size: 15px; }
+body {
+  font-family: var(--sans);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  background-image:
+    radial-gradient(ellipse 80% 50% at 10% 0%, rgba(201,120,62,0.04), transparent),
+    radial-gradient(ellipse 60% 40% at 90% 100%, rgba(58,107,123,0.04), transparent),
+    radial-gradient(ellipse 50% 30% at 50% 50%, rgba(107,142,90,0.03), transparent);
+}
+
+/* ===== Layout ===== */
+.app { margin-left: var(--sidebar); padding: 32px 40px 80px; }
+
+/* ===== Sidebar（桌面端左侧栏，仿参考页布局） ===== */
+.sidebar {
+  position: fixed;
+  inset: 0 auto 0 0;
+  width: var(--sidebar);
+  padding: 26px 18px 20px;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  z-index: 30;
+  overflow-y: auto;
+}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 8px 22px;
+}
+.brand-mark {
+  width: 42px; height: 42px;
+  border-radius: 14px;
+  background: linear-gradient(145deg, var(--time), #B05F2E);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  font-size: 1.25rem;
+  font-weight: 700;
+  flex-shrink: 0;
+  box-shadow: var(--shadow-sm);
+}
+.brand-name { font-weight: 700; font-size: 1.02rem; line-height: 1.3; }
+.brand-tagline { font-size: 0.7rem; color: var(--text-3); letter-spacing: 0.03em; }
+.side-nav { display: flex; flex-direction: column; gap: 4px; }
+.side-nav .nav-label {
+  font-size: 0.68rem;
+  color: var(--text-3);
+  letter-spacing: 0.12em;
+  padding: 14px 12px 6px;
+}
+.side-nav .nav-item {
+  width: 100%;
+  justify-content: flex-start;
+  padding: 11px 14px;
+  font-size: 0.86rem;
+}
+.side-footer {
+  margin-top: auto;
+  padding: 18px 8px 0;
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.side-footer .account-btn { width: 100%; justify-content: center; }
+.side-date { text-align: center; }
+.side-date .date-main { font-size: 0.82rem; font-weight: 600; color: var(--text-2); font-variant-numeric: tabular-nums; }
+.side-date .date-sub { font-size: 0.7rem; color: var(--text-3); margin-top: 1px; }
+
+/* ===== 模块左右分栏（左窄表单/概览 sticky，右宽数据流） ===== */
+.module-layout {
+  display: grid;
+  grid-template-columns: minmax(280px, 340px) minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+.sticky-col {
+  position: sticky;
+  top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-width: 0;
+}
+.main-col { min-width: 0; display: flex; flex-direction: column; gap: 20px; }
+
+/* ===== Header ===== */
+.header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: 28px;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.header-left h1 {
+  font-family: var(--serif);
+  font-size: 2rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+.header-left .subtitle {
+  color: var(--text-2);
+  font-size: 0.85rem;
+  margin-top: 4px;
+  letter-spacing: 0.02em;
+}
+.header-date {
+  text-align: right;
+}
+.header-date .date-main {
+  font-family: var(--serif);
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: var(--text);
+}
+.header-date .date-sub {
+  font-size: 0.78rem;
+  color: var(--text-3);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+.header-right { display: flex; align-items: flex-end; gap: 14px; }
+.account-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 7px 14px; border-radius: 999px;
+  border: 1px solid var(--border-strong); background: var(--surface);
+  color: var(--text-2); font-size: 0.8rem; cursor: pointer;
+  transition: all 0.2s; white-space: nowrap; font-family: inherit;
+}
+.account-btn:hover { border-color: var(--health); color: var(--health); }
+.account-btn.signed { background: var(--health-bg); border-color: var(--health); color: var(--health); }
+.account-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--text-3); }
+.account-btn.signed .account-dot { background: var(--health); }
+
+/* Auth modal */
+.auth-modal { max-width: 400px; padding: 26px 26px 22px; text-align: left; }
+.auth-head { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+.auth-head .card-title { font-size: 1.1rem; flex: 1; }
+.auth-tabs { display: flex; gap: 4px; margin-bottom: 16px; background: var(--surface-alt); padding: 4px; border-radius: 12px; }
+.auth-tab { flex: 1; padding: 8px 4px; border: none; background: none; border-radius: 9px; font-size: 0.8rem; color: var(--text-2); cursor: pointer; font-family: inherit; }
+.auth-tab.active { background: var(--surface); color: var(--text); box-shadow: var(--shadow-sm); font-weight: 500; }
+.auth-field { margin-bottom: 10px; }
+.auth-input { width: 100%; padding: 11px 13px; border: 1px solid var(--border-strong); border-radius: 12px; font-size: 0.9rem; background: var(--surface-alt); color: var(--text); font-family: inherit; }
+.auth-input:focus { outline: none; border-color: var(--health); }
+.auth-row { display: flex; gap: 8px; }
+.auth-row .auth-input { flex: 1; }
+.auth-btn { width: 100%; padding: 12px; border: none; border-radius: 12px; background: var(--health); color: #fff; font-size: 0.92rem; cursor: pointer; margin-top: 8px; font-family: inherit; }
+.auth-btn:disabled { opacity: 0.5; cursor: default; }
+.auth-link { text-align: right; font-size: 0.78rem; color: var(--text-3); margin-top: 10px; cursor: pointer; }
+.auth-link:hover { color: var(--health); }
+.auth-msg { font-size: 0.8rem; margin-top: 10px; min-height: 17px; color: var(--health); line-height: 1.5; }
+.auth-msg.err { color: #C0392B; }
+.auth-signed .auth-user { font-size: 0.95rem; color: var(--text); margin-bottom: 8px; word-break: break-all; }
+.auth-signed .auth-note { font-size: 0.8rem; color: var(--text-2); line-height: 1.6; margin-bottom: 6px; }
+
+/* Sync conflict */
+.sync-note { font-size: 0.84rem; color: var(--text-2); line-height: 1.6; margin-bottom: 14px; }
+.sync-opt { display: block; width: 100%; text-align: left; padding: 14px; border: 1px solid var(--border-strong); border-radius: 14px; background: var(--surface-alt); cursor: pointer; margin-bottom: 10px; font-family: inherit; }
+.sync-opt:hover { border-color: var(--health); }
+.sync-opt-title { font-size: 0.92rem; color: var(--text); margin-bottom: 4px; }
+.sync-opt-desc { font-size: 0.78rem; color: var(--text-3); }
+.sync-badge { display: inline-block; font-size: 0.72rem; color: var(--text-3); padding: 2px 8px; border-radius: 999px; border: 1px solid var(--border-strong); }
+.sync-badge.ok { color: var(--health); border-color: var(--health); }
+
+/* ===== Navigation ===== */
+.nav {
+  display: flex;
+  gap: 4px;
+  background: var(--surface);
+  padding: 5px;
+  border-radius: 14px;
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 28px;
+  width: fit-content;
+  border: 1px solid var(--border);
+}
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-2);
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: none;
+  background: transparent;
+  font-family: var(--sans);
+  white-space: nowrap;
+}
+.nav-item:hover { color: var(--text); background: var(--surface-alt); }
+.nav-item.active { color: var(--surface); }
+.nav-item.active[data-tab="time"] { background: var(--time); }
+.nav-item.active[data-tab="schedule"] { background: var(--schedule); }
+.nav-item.active[data-tab="health"] { background: var(--health); }
+.nav-item.active[data-tab="hot"] { background: var(--hot); }
+.nav-item.active[data-tab="ai"] { background: var(--ai); }
+.nav-item .nav-icon { font-size: 1rem; }
+
+/* ===== Views ===== */
+.view { display: none; animation: fadeIn 0.4s ease; }
+.view.active { display: block; }
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ===== Cards ===== */
+.card {
+  background: var(--surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--border);
+  overflow: hidden;
+  transition: box-shadow 0.3s ease, transform 0.3s ease;
+}
+.card:hover { box-shadow: var(--shadow-lg); transform: translateY(-2px); }
+.card-header {
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid var(--border);
+}
+.card-title {
+  font-family: var(--serif);
+  font-size: 1.05rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.card-subtitle {
+  font-size: 0.78rem;
+  color: var(--text-3);
+  margin-top: 2px;
+}
+.card-body { padding: 20px 24px; }
+
+/* ===== Time Management ===== */
+.time-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.clock-card {
+  background: linear-gradient(145deg, #2A2723, #3D3833);
+  border-radius: var(--radius);
+  padding: 36px 32px;
+  color: #F4EFE7;
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--shadow-lg);
+}
+.clock-card::before {
+  content: '';
+  position: absolute;
+  top: -50%; right: -30%;
+  width: 300px; height: 300px;
+  background: radial-gradient(circle, rgba(201,120,62,0.15), transparent 70%);
+  border-radius: 50%;
+}
+.clock-time {
+  font-family: var(--serif);
+  font-size: 3.5rem;
+  font-weight: 300;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  position: relative;
+}
+.clock-time .seconds {
+  font-size: 1.5rem;
+  color: var(--time-soft);
+  vertical-align: baseline;
+  margin-left: 4px;
+  letter-spacing: 0;
+}
+.clock-date {
+  font-size: 0.85rem;
+  color: rgba(244,239,231,0.6);
+  margin-top: 12px;
+  letter-spacing: 0.03em;
+  position: relative;
+}
+.clock-greeting {
+  font-family: var(--serif);
+  font-size: 0.95rem;
+  color: var(--time-soft);
+  margin-top: 16px;
+  position: relative;
+}
+
+/* Pomodoro Timer */
+.pomodoro-card {
+  background: var(--surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--border);
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.pomodoro-label {
+  font-size: 0.75rem;
+  color: var(--text-3);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-bottom: 16px;
+}
+.pomodoro-phase {
+  font-family: var(--serif);
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: var(--time);
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.pomodoro-phase .phase-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--time);
+  animation: pulse 2s ease-in-out infinite;
+}
+.pomodoro-phase.break .phase-dot { background: var(--health); }
+.pomodoro-phase.break { color: var(--health); }
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(1.3); }
+}
+
+.pomodoro-ring {
+  position: relative;
+  width: 200px; height: 200px;
+  margin-bottom: 20px;
+}
+.pomodoro-ring svg { transform: rotate(-90deg); }
+.pomodoro-ring .ring-bg {
+  fill: none;
+  stroke: var(--border);
+  stroke-width: 6;
+}
+.pomodoro-ring .ring-progress {
+  fill: none;
+  stroke: var(--time);
+  stroke-width: 6;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 1s linear, stroke 0.4s;
+}
+.pomodoro-ring.break .ring-progress { stroke: var(--health); }
+.pomodoro-time {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  font-family: var(--serif);
+  font-size: 2.5rem;
+  font-weight: 400;
+  letter-spacing: -0.02em;
+}
+.pomodoro-controls {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.pomodoro-stats {
+  font-size: 0.78rem;
+  color: var(--text-3);
+  display: flex;
+  gap: 16px;
+}
+.pomodoro-stats span { display: flex; align-items: center; gap: 4px; }
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 20px;
+  border-radius: var(--radius-sm);
+  font-family: var(--sans);
+  font-size: 0.85rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  white-space: nowrap;
+}
+.btn-primary {
+  background: var(--time);
+  color: white;
+}
+.btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(201,120,62,0.3); }
+.btn-primary:active { transform: translateY(0); }
+.btn-secondary {
+  background: var(--surface-alt);
+  color: var(--text-2);
+  border: 1px solid var(--border);
+}
+.btn-secondary:hover { background: var(--bg-warm); color: var(--text); }
+.btn-ghost {
+  background: transparent;
+  color: var(--text-2);
+}
+.btn-ghost:hover { background: var(--surface-alt); }
+.btn-sm { padding: 7px 14px; font-size: 0.8rem; }
+.btn-icon {
+  width: 32px; height: 32px;
+  padding: 0;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--text-3);
+  transition: all 0.2s;
+  font-size: 1rem;
+}
+.btn-icon:hover { background: var(--surface-alt); color: var(--text); }
+
+/* Schedule */
+.schedule-card { margin-top: 20px; }
+.schedule-add {
+  display: flex;
+  gap: 10px;
+  padding: 16px 24px;
+  background: var(--surface-alt);
+  border-bottom: 1px solid var(--border);
+  align-items: center;
+  flex-wrap: wrap;
+}
+.schedule-add input, .schedule-add select {
+  padding: 9px 12px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-xs);
+  font-family: var(--sans);
+  font-size: 0.85rem;
+  background: var(--surface);
+  color: var(--text);
+  outline: none;
+  transition: border 0.2s;
+}
+.schedule-add input:focus, .schedule-add select:focus { border-color: var(--time); }
+.schedule-add input[type="text"] { flex: 1; min-width: 120px; }
+.schedule-add input[type="time"] { width: 100px; }
+
+.schedule-list { max-height: 360px; overflow-y: auto; }
+.schedule-list::-webkit-scrollbar { width: 4px; }
+.schedule-list::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 2px; }
+
+.schedule-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 24px;
+  border-bottom: 1px solid var(--border);
+  transition: background 0.2s;
+  animation: slideIn 0.3s ease;
+}
+.schedule-item:hover { background: var(--surface-alt); }
+.schedule-item:last-child { border-bottom: none; }
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(-8px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.schedule-time {
+  font-family: var(--serif);
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--time);
+  min-width: 60px;
+  letter-spacing: -0.01em;
+}
+.schedule-content {
+  flex: 1;
+  font-size: 0.875rem;
+  color: var(--text);
+}
+.schedule-item.done .schedule-content {
+  text-decoration: line-through;
+  color: var(--text-3);
+}
+.schedule-item.done .schedule-time { color: var(--text-3); }
+
+.custom-checkbox {
+  width: 20px; height: 20px;
+  border: 2px solid var(--border-strong);
+  border-radius: 6px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  flex-shrink: 0;
+  background: var(--surface);
+}
+.custom-checkbox:hover { border-color: var(--time); }
+.custom-checkbox.checked {
+  background: var(--time);
+  border-color: var(--time);
+}
+.custom-checkbox.checked::after {
+  content: '✓';
+  color: white;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.empty-state {
+  padding: 36px 24px;
+  text-align: center;
+  color: var(--text-3);
+  font-size: 0.85rem;
+  background: var(--surface-alt);
+  border-radius: var(--radius-sm);
+  margin: 14px 18px;
+}
+.empty-state .empty-icon { font-size: 2rem; margin-bottom: 8px; opacity: 0.5; }
+
+/* ===== Work & Study ===== */
+.work-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+.work-add-bar {
+  display: flex;
+  gap: 10px;
+  padding: 16px 24px;
+  background: var(--surface-alt);
+  border-bottom: 1px solid var(--border);
+  align-items: center;
+  flex-wrap: wrap;
+}
+.work-add-bar input, .work-add-bar select {
+  padding: 9px 12px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-xs);
+  font-family: var(--sans);
+  font-size: 0.85rem;
+  background: var(--surface);
+  color: var(--text);
+  outline: none;
+  transition: border 0.2s;
+}
+.work-add-bar input:focus, .work-add-bar select:focus { border-color: var(--work); }
+.work-add-bar input[type="text"] { flex: 1; min-width: 100px; }
+.work-add-bar input[type="time"] { width: 90px; }
+.work-add-bar select { width: 90px; }
+
+.work-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--border);
+  transition: background 0.2s;
+  animation: slideIn 0.3s ease;
+}
+.work-item:hover { background: var(--surface-alt); }
+.work-item:last-child { border-bottom: none; }
+.work-item-info { flex: 1; }
+.work-item-title {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+.work-item.done .work-item-title {
+  text-decoration: line-through;
+  color: var(--text-3);
+}
+.work-item-meta {
+  font-size: 0.75rem;
+  color: var(--text-3);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.work-stats {
+  display: flex;
+  gap: 24px;
+  padding: 20px 24px;
+  background: var(--surface-alt);
+  border-bottom: 1px solid var(--border);
+}
+.stat-item { text-align: center; }
+.stat-value {
+  font-family: var(--serif);
+  font-size: 1.6rem;
+  font-weight: 600;
+  line-height: 1;
+}
+.stat-value.work-color { color: var(--work); }
+.stat-value.study-color { color: #6B5B8E; }
+.stat-value.done-color { color: var(--health); }
+.stat-label {
+  font-size: 0.72rem;
+  color: var(--text-3);
+  margin-top: 4px;
+  letter-spacing: 0.04em;
+}
+
+/* ===== Work add-bar date inputs ===== */
+.work-add-bar input[type="date"] { width: 140px; }
+.work-add-bar .date-sep { color: var(--text-3); font-size: 0.85rem; }
+.work-add-bar input[type="text"] { min-width: 120px; }
+
+/* ===== Calendar ===== */
+.cal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 24px 8px;
+}
+.cal-title { font-size: 0.95rem; font-weight: 600; color: var(--text); }
+.cal-head .btn-icon { font-size: 1.3rem; line-height: 1; width: 34px; height: 34px; }
+.cal-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  padding: 0 24px;
+  gap: 4px;
+}
+.cal-weekdays span {
+  text-align: center;
+  font-size: 0.72rem;
+  color: var(--text-3);
+  padding: 6px 0;
+}
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+  padding: 6px 24px 16px;
+}
+.cal-cell {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  color: var(--text);
+  border-radius: var(--radius-xs);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  user-select: none;
+}
+.cal-cell:hover { background: var(--surface-alt); }
+.cal-cell.empty { cursor: default; background: transparent; }
+.cal-cell.today {
+  background: var(--work-bg);
+  color: var(--work);
+  font-weight: 700;
+}
+.cal-cell.selected {
+  background: var(--work);
+  color: #fff;
+  font-weight: 700;
+}
+.cal-cell.has-note::after { content: ''; }
+.cal-dot {
+  position: absolute;
+  bottom: 6px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--work);
+}
+.cal-cell.selected .cal-dot { background: #fff; }
+.cal-note-area {
+  margin: 0 24px 20px;
+  padding: 16px;
+  background: var(--surface-alt);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+}
+.cal-note-date { font-size: 0.85rem; font-weight: 600; color: var(--text); margin-bottom: 10px; }
+.cal-note-area textarea {
+  width: 100%;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-xs);
+  padding: 10px 12px;
+  font-family: var(--sans);
+  font-size: 0.85rem;
+  color: var(--text);
+  background: var(--surface);
+  outline: none;
+  resize: vertical;
+  box-sizing: border-box;
+}
+.cal-note-area textarea:focus { border-color: var(--work); }
+.cal-note-actions { display: flex; gap: 8px; margin-top: 10px; }
+
+/* ===== Healthy Living ===== */
+.health-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+/* ===== Health Hero ===== */
+.health-hero {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+  padding: 24px 28px;
+  border-radius: var(--radius);
+  background: linear-gradient(135deg, #6B8E5A 0%, #84A86B 100%);
+  color: #fff;
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+}
+.health-hero-glow {
+  position: absolute;
+  inset: auto -40px -60px auto;
+  width: 220px; height: 220px;
+  background: radial-gradient(circle, rgba(255,255,255,0.22), transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+}
+.health-hero-main { position: relative; z-index: 1; }
+.health-hero-title {
+  font-family: var(--serif);
+  font-size: 1.45rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.health-hero-sub {
+  margin-top: 6px;
+  font-size: 0.85rem;
+  color: rgba(255,255,255,0.85);
+  letter-spacing: 0.02em;
+}
+.health-hero-stats {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  gap: 12px;
+}
+.hstat {
+  min-width: 84px;
+  padding: 12px 16px;
+  border-radius: 14px;
+  background: rgba(255,255,255,0.16);
+  backdrop-filter: blur(4px);
+  text-align: center;
+}
+.hstat-v {
+  font-family: var(--serif);
+  font-size: 1.6rem;
+  font-weight: 600;
+  line-height: 1.1;
+}
+.hstat-l {
+  font-size: 0.72rem;
+  color: rgba(255,255,255,0.85);
+  margin-top: 2px;
+  letter-spacing: 0.04em;
+}
+
+/* ===== Reminder pills ===== */
+.reminder-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  padding: 18px 24px;
+  background: var(--health-bg);
+}
+.reminder-pill {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 14px 10px;
+  border-radius: 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.reminder-pill:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+.rp-emoji { font-size: 1.4rem; }
+.rp-name { font-size: 0.8rem; color: var(--text-2); font-weight: 600; }
+.reminder-pill input[type="time"] {
+  padding: 6px 8px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-xs);
+  font-family: var(--sans);
+  font-size: 0.8rem;
+  background: var(--surface-alt);
+  color: var(--text);
+  outline: none;
+  width: 92px;
+  text-align: center;
+}
+.reminder-pill input[type="time"]:focus { border-color: var(--health); }
+
+.health-add-bar {
+  display: flex;
+  gap: 8px;
+  padding: 14px 24px;
+  background: var(--surface-alt);
+  border-bottom: 1px solid var(--border);
+  align-items: center;
+  flex-wrap: wrap;
+}
+.health-add-bar input, .health-add-bar select {
+  padding: 8px 10px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-xs);
+  font-family: var(--sans);
+  font-size: 0.82rem;
+  background: var(--surface);
+  color: var(--text);
+  outline: none;
+}
+.health-add-bar input:focus, .health-add-bar select:focus { border-color: var(--health); }
+.health-add-bar input[type="text"] { flex: 1; min-width: 80px; }
+.health-add-bar input[type="time"] { width: 80px; }
+.health-add-bar input[type="number"] { width: 70px; }
+
+.health-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 14px 24px;
+  border-bottom: 1px solid var(--border);
+  transition: background 0.2s;
+  animation: slideIn 0.3s ease;
+}
+.health-item:hover { background: var(--surface-alt); }
+.health-item:last-child { border-bottom: none; }
+.health-item-icon {
+  width: 36px; height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+.health-item-icon.diet { background: var(--health-bg); }
+.health-item-icon.exercise { background: var(--work-bg); }
+.health-item-content { flex: 1; }
+.health-item-title {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text);
+}
+.health-item-meta {
+  font-size: 0.75rem;
+  color: var(--text-3);
+  margin-top: 2px;
+}
+.health-timeline { display: flex; flex-direction: column; max-height: 360px; overflow-y: auto; }
+.health-item.diet { border-left: 3px solid var(--health); }
+.health-item.exercise { border-left: 3px solid var(--work); }
+
+/* ===== AI Hotspot Module ===== */
+:root {
+  --ai: #6E5AA8;
+  --ai-soft: #D8D0EC;
+  --ai-bg: #F5F2FA;
+}
+.ai-grid {
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: 20px;
+  align-items: start;
+}
+
+.ai-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 24px;
+  background: var(--ai-bg);
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+.ai-toolbar-left { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.ai-updated { font-size: 0.75rem; color: var(--text-3); }
+
+.ai-news-list { max-height: 340px; overflow-y: auto; }
+.ai-news-list::-webkit-scrollbar { width: 4px; }
+.ai-news-list::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 2px; }
+
+.ai-news-card {
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--border);
+  transition: background 0.2s;
+  animation: slideIn 0.3s ease;
+}
+.ai-news-card:hover { background: var(--surface-alt); }
+.ai-news-card:last-child { border-bottom: none; }
+.ai-news-head { display: flex; align-items: flex-start; gap: 10px; }
+.ai-news-num {
+  font-family: var(--serif);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--ai);
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.ai-news-title {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--text);
+  line-height: 1.45;
+  text-decoration: none;
+  flex: 1;
+}
+.ai-news-title:hover { color: var(--ai); text-decoration: underline; }
+.ai-news-meta {
+  font-size: 0.74rem;
+  color: var(--text-3);
+  margin: 6px 0 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.ai-news-meta .cat-tag {
+  background: var(--ai-bg);
+  color: var(--ai);
+  padding: 1px 8px;
+  border-radius: 10px;
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+.ai-news-summary {
+  font-size: 0.82rem;
+  color: var(--text-2);
+  line-height: 1.6;
+}
+.ai-news-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+.ai-news-actions .mini-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 12px;
+  border-radius: 8px;
+  font-size: 0.76rem;
+  font-weight: 600;
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  color: var(--text-2);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.ai-news-actions .mini-btn:hover { background: var(--ai-bg); color: var(--ai); border-color: var(--ai-soft); }
+.ai-news-actions .mini-btn.copied { background: var(--ai); color: white; border-color: var(--ai); }
+
+/* Collection panel */
+.ai-collection-add {
+  padding: 16px 20px;
+  background: var(--surface-alt);
+  border-bottom: 1px solid var(--border);
+}
+.ai-collection-add input, .ai-collection-add textarea {
+  width: 100%;
+  padding: 9px 12px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-xs);
+  font-family: var(--sans);
+  font-size: 0.85rem;
+  background: var(--surface);
+  color: var(--text);
+  outline: none;
+  margin-bottom: 10px;
+  resize: vertical;
+}
+.ai-collection-add input:focus, .ai-collection-add textarea:focus { border-color: var(--ai); }
+.ai-collection-add textarea { min-height: 90px; line-height: 1.5; }
+.ai-collection-add .add-actions { display: flex; gap: 8px; justify-content: flex-end; }
+
+.ai-collection-list { max-height: 520px; overflow-y: auto; }
+.ai-collection-list::-webkit-scrollbar { width: 4px; }
+.ai-collection-list::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 2px; }
+
+.ai-collection-item {
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border);
+  animation: slideIn 0.3s ease;
+}
+.ai-collection-item:last-child { border-bottom: none; }
+.ai-collection-item-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+.ai-collection-item-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--ai);
+}
+.ai-collection-item-time { font-size: 0.7rem; color: var(--text-3); flex-shrink: 0; }
+.ai-collection-item-content {
+  font-size: 0.82rem;
+  color: var(--text-2);
+  line-height: 1.55;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.ai-attrib {
+  font-size: 0.72rem;
+  color: var(--text-3);
+  text-align: center;
+  margin-top: 16px;
+  letter-spacing: 0.02em;
+}
+.ai-attrib a { color: var(--ai); text-decoration: none; }
+.ai-attrib a:hover { text-decoration: underline; }
+
+/* ===== AI 日报 ===== */
+.ai-daily-card { border-top: 3px solid var(--ai); }
+.ai-daily-body { padding: 4px 24px 18px; }
+.ai-daily-lead {
+  font-size: 0.95rem;
+  line-height: 1.7;
+  color: var(--text);
+  padding: 14px 0;
+  border-bottom: 1px dashed var(--border-strong);
+  margin-bottom: 12px;
+}
+.ai-daily-item { padding: 13px 0; border-bottom: 1px solid var(--border); }
+.ai-daily-item:last-child { border-bottom: none; }
+.ai-daily-item-top { display: flex; align-items: baseline; gap: 8px; }
+.ai-daily-rank {
+  font-size: 0.8rem; font-weight: 700; color: var(--ai);
+  font-variant-numeric: tabular-nums; flex-shrink: 0;
+}
+.ai-daily-item a { color: var(--text); font-weight: 600; text-decoration: none; font-size: 0.92rem; line-height: 1.5; }
+.ai-daily-item a:hover { color: var(--ai); text-decoration: underline; }
+.ai-daily-item .sum { font-size: 0.82rem; color: var(--text-2); line-height: 1.6; margin-top: 4px; }
+.ai-daily-item .meta { font-size: 0.72rem; color: var(--text-3); margin-top: 6px; display: flex; gap: 10px; flex-wrap: wrap; }
+.ai-daily-item .meta a { font-size: 0.72rem; color: var(--ai); font-weight: 400; }
+
+/* ===== 热点日报 ===== */
+.hot-hero {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+  padding: 26px 30px;
+  margin-bottom: 20px;
+  border-radius: var(--radius);
+  background: linear-gradient(135deg, #E0554E 0%, #F07B5A 100%);
+  color: #fff;
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+}
+.hot-hero-glow {
+  position: absolute; top: -60%; right: -10%;
+  width: 340px; height: 340px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,255,255,0.22), transparent 70%);
+}
+.hot-hero-title { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.01em; position: relative; }
+.hot-hero-sub { font-size: 0.86rem; opacity: 0.92; margin-top: 4px; position: relative; }
+.hot-hero-meta { font-size: 0.78rem; opacity: 0.85; position: relative; text-align: right; }
+.hot-brief { padding: 6px 0; }
+.hot-brief-tag {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 7px 13px; margin: 0 8px 8px 0;
+  background: var(--hot-bg); color: var(--hot);
+  border: 1px solid var(--hot-soft); border-radius: 999px;
+  font-size: 0.82rem; font-weight: 600; cursor: default;
+}
+.hot-brief-note { font-size: 0.76rem; color: var(--text-3); line-height: 1.6; margin-top: 6px; padding-top: 10px; border-top: 1px dashed var(--border-strong); }
+.hot-list { padding: 8px 24px 16px; }
+.hot-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 13px 0; border-bottom: 1px solid var(--border);
+}
+.hot-row:last-child { border-bottom: none; }
+.hot-rank {
+  width: 30px; height: 30px; flex-shrink: 0;
+  display: grid; place-items: center;
+  border-radius: 9px; font-size: 0.82rem; font-weight: 700;
+  background: var(--surface-alt); color: var(--text-2);
+  font-variant-numeric: tabular-nums;
+}
+.hot-row:nth-child(-n+3) .hot-rank { background: var(--hot-bg); color: var(--hot); }
+.hot-row-title {
+  flex: 1; min-width: 0;
+  font-size: 0.9rem; font-weight: 600; color: var(--text);
+  line-height: 1.45;
+}
+.hot-row-title a { color: inherit; text-decoration: none; }
+.hot-row-title a:hover { color: var(--hot); text-decoration: underline; }
+.hot-row-heat { flex-shrink: 0; font-size: 0.76rem; color: var(--hot); font-weight: 600; font-variant-numeric: tabular-nums; }
+.hot-row .src-tag {
+  flex-shrink: 0; font-size: 0.68rem; color: var(--text-3);
+  background: var(--surface-alt); padding: 2px 8px; border-radius: 999px;
+}
+
+/* ===== 设计精修：主题色条 / 侧栏指示 / 卡片质感 ===== */
+/* 各模块主卡顶部主题色条 */
+#view-schedule .schedule-card { border-top: 3px solid var(--schedule); }
+#view-hot .card:first-of-type { border-top: 3px solid var(--hot); }
+#view-hot .main-col .card:first-of-type { border-top: 3px solid var(--hot); }
+#view-hot .main-col .card:last-of-type { border-top: 3px solid var(--health); }
+#view-ai .ai-daily-card { border-top: 3px solid var(--ai); }
+#view-health .card:first-of-type { border-top: 3px solid var(--health); }
+
+/* 侧栏导航：active 左侧指示条 + 柔和选中底 */
+.side-nav .nav-item { position: relative; border-radius: 10px; }
+.side-nav .nav-item.active::before {
+  content: '';
+  position: absolute; left: -18px; top: 50%;
+  width: 4px; height: 22px;
+  border-radius: 0 4px 4px 0;
+  background: currentColor;
+  transform: translateY(-50%);
+}
+.side-nav .nav-item.active {
+  background: var(--surface-alt);
+  box-shadow: inset 0 0 0 1px var(--border-strong);
+}
+
+/* 品牌 mark 光晕 */
+.brand-mark { position: relative; }
+.brand-mark::after {
+  content: '';
+  position: absolute; inset: -3px;
+  border-radius: 16px;
+  background: linear-gradient(145deg, var(--time), var(--hot));
+  opacity: 0.35; z-index: -1; filter: blur(8px);
+}
+
+/* 卡片标题 emoji 锚点一致性：保持原有，加强标题字重 */
+.card-title { font-weight: 650; }
+
+/* 数字大字光学修正 */
+.clock-time, .pomodoro-time { letter-spacing: 0; }
+.stat-value, .hstat-v { letter-spacing: -0.01em; }
+
+/* 卡片 hover 动效增强（更细腻） */
+.card { transition: box-shadow 0.25s cubic-bezier(0.4,0,0.2,1), transform 0.25s cubic-bezier(0.4,0,0.2,1); }
+
+/* 热榜/资讯行 hover */
+.hot-row, .ai-news-card { transition: background 0.2s ease; }
+.hot-row:hover { background: var(--hot-bg); }
+
+/* ===== Modal ===== */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(42, 39, 35, 0.4);
+  backdrop-filter: blur(6px);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: modalFade 0.3s ease;
+}
+.modal-overlay.show { display: flex; }
+@keyframes modalFade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.modal {
+  background: var(--surface);
+  border-radius: 20px;
+  padding: 40px;
+  max-width: 420px;
+  width: 90%;
+  text-align: center;
+  box-shadow: var(--shadow-lg);
+  animation: modalScale 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes modalScale {
+  from { transform: scale(0.85); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+.modal-icon {
+  font-size: 3rem;
+  margin-bottom: 16px;
+}
+.modal-title {
+  font-family: var(--serif);
+  font-size: 1.4rem;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+.modal-message {
+  color: var(--text-2);
+  font-size: 0.9rem;
+  margin-bottom: 24px;
+  line-height: 1.5;
+}
+.modal-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+/* ===== Toast ===== */
+.toast {
+  position: fixed;
+  bottom: 32px;
+  left: 50%;
+  transform: translateX(-50%) translateY(100px);
+  background: var(--text);
+  color: var(--bg);
+  padding: 12px 24px;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  box-shadow: var(--shadow-lg);
+  z-index: 1100;
+  opacity: 0;
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  pointer-events: none;
+}
+.toast.show {
+  transform: translateX(-50%) translateY(0);
+  opacity: 1;
+}
+
+/* ===== Responsive ===== */
+/* ===== Desktop: sidebar visible, top nav & header hidden ===== */
+@media (min-width: 1081px) {
+  .nav { display: none; }
+  .header { display: none; }
+}
+
+/* ===== Below 1080px: sidebar hidden, back to top nav ===== */
+@media (max-width: 1080px) {
+  .sidebar { display: none; }
+  .app { margin-left: 0; padding: 24px 20px 70px; }
+  .module-layout { grid-template-columns: 1fr; }
+  .sticky-col { position: static; }
+}
+
+/* ===== Tablet ===== */
+@media (max-width: 860px) {
+  .time-grid, .work-grid, .health-grid, .ai-grid { grid-template-columns: 1fr; }
+  .clock-time { font-size: 2.5rem; }
+  .header-left h1 { font-size: 1.5rem; }
+  .app { padding: 20px 16px 60px; }
+}
+
+/* ===== Mobile (Phone) ===== */
+@media (max-width: 560px) {
+  html { font-size: 14px; }
+  .app { padding: 16px 10px 56px; }
+
+  /* Header */
+  .header { flex-direction: column; align-items: flex-start; gap: 8px; margin-bottom: 18px; }
+  .header-left h1 { font-size: 1.35rem; }
+  .header-date { text-align: left; }
+  .header-date .date-main { font-size: 0.95rem; }
+
+  /* Nav — full-width evenly distributed */
+  .nav {
+    width: 100%;
+    display: flex;
+    padding: 4px;
+    gap: 2px;
+    margin-bottom: 18px;
+  }
+  .nav-item {
+    flex: 1;
+    flex-direction: column;
+    gap: 2px;
+    padding: 9px 2px;
+    font-size: 0.72rem;
+    border-radius: 9px;
+  }
+  .nav-item .nav-icon { font-size: 1.2rem; }
+
+  /* Cards tighter padding */
+  .card-header { padding: 16px 16px 12px; }
+  .card-body { padding: 16px; }
+  .schedule-add, .work-add-bar, .health-add-bar {
+    padding: 12px 14px;
+    gap: 8px;
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .reminder-grid { grid-template-columns: repeat(2, 1fr); padding: 14px; }
+  .health-hero { flex-direction: column; align-items: flex-start; }
+  .health-hero-stats { width: 100%; }
+  .hstat { flex: 1; min-width: 0; }
+  .hot-hero { flex-direction: column; align-items: flex-start; }
+  .hot-hero-meta { text-align: left; }
+
+  /* Inputs full-width + 16px to prevent iOS auto-zoom */
+  .schedule-add input, .schedule-add select,
+  .work-add-bar input, .work-add-bar select,
+  .health-add-bar input, .health-add-bar select,
+  .reminder-pill input[type="time"] {
+    width: 100% !important;
+    font-size: 16px !important;
+    padding: 11px 12px;
+    min-height: 44px;
+  }
+  .schedule-add input[type="text"],
+  .work-add-bar input[type="text"],
+  .health-add-bar input[type="text"] { min-width: 0; }
+
+  /* Hide the dash separator when date inputs stack vertically */
+  .work-add-bar .date-sep { display: none; }
+
+  /* Buttons full-width on mobile */
+  .schedule-add .btn,
+  .work-add-bar .btn,
+  .health-add-bar .btn {
+    width: 100%;
+    padding: 12px;
+  }
+
+  /* Clock + Timer scale */
+  .time-grid { gap: 14px; }
+  .clock-card { padding: 28px 22px; }
+  .clock-time { font-size: 2.6rem; }
+  .clock-time .seconds { font-size: 1.1rem; }
+
+  .pomodoro-card { padding: 22px 16px; }
+  .pomodoro-ring { width: 168px; height: 168px; }
+  .pomodoro-ring svg { width: 168px; height: 168px; }
+  .pomodoro-time { font-size: 2.1rem; }
+  .pomodoro-controls { width: 100%; }
+  .pomodoro-controls .btn { flex: 1; }
+
+  /* Schedule / work / health items tighter */
+  .schedule-item, .work-item, .health-item {
+    padding: 13px 16px;
+    gap: 11px;
+  }
+  .schedule-time { min-width: 48px; font-size: 0.85rem; }
+  .work-item-meta { flex-wrap: wrap; }
+
+  /* Stats grid */
+  .work-stats { gap: 12px; flex-wrap: wrap; justify-content: space-around; padding: 16px; }
+  .stat-value { font-size: 1.3rem; }
+
+  /* Modal */
+  .modal { padding: 28px 22px; max-width: 92%; }
+  .modal-title { font-size: 1.15rem; }
+  .modal-actions .btn { width: 100%; }
+}
+
+/* ===== Very small phones ===== */
+@media (max-width: 360px) {
+  .clock-time { font-size: 2.2rem; }
+  .nav-item { font-size: 0.66rem; }
+  .pomodoro-ring { width: 150px; height: 150px; }
+  .pomodoro-ring svg { width: 150px; height: 150px; }
+  .pomodoro-time { font-size: 1.9rem; }
+}
+
+/* ===== Health Reminders (self-managed list) ===== */
+.reminder-add {
+  display: flex; gap: 8px; padding: 14px 24px; background: var(--surface-alt);
+  border-bottom: 1px solid var(--border); align-items: center; flex-wrap: wrap;
+}
+.reminder-add input[type="time"] { width: 96px; }
+.reminder-add input[type="text"] { flex: 1; min-width: 120px; }
+.reminder-list { display: flex; flex-direction: column; max-height: 280px; overflow-y: auto; }
+.reminder-item {
+  display: flex; align-items: center; gap: 12px; padding: 12px 24px;
+  border-bottom: 1px solid var(--border); transition: background 0.2s; animation: slideIn 0.3s ease;
+}
+.reminder-item:last-child { border-bottom: none; }
+.reminder-item:hover { background: var(--surface-alt); }
+.reminder-item .ri-time {
+  font-family: var(--serif); font-weight: 600; font-size: 0.95rem; color: var(--health);
+  background: var(--health-bg); padding: 4px 10px; border-radius: 10px; min-width: 56px; text-align: center;
+}
+.reminder-item .ri-content { flex: 1; font-size: 0.875rem; color: var(--text); }
+.reminder-empty { padding: 22px 24px; text-align: center; color: var(--text-3); font-size: 0.85rem; }
+.reminder-hint {
+  padding: 14px 24px; text-align: center; font-size: 0.85rem; color: var(--health);
+  font-family: var(--serif); letter-spacing: 0.04em; background: var(--health-bg);
+}
+
+/* ===== Daily Records / Diary ===== */
+.diary-card { overflow: hidden; }
+.diary-header { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+.diary-header .card-title { margin-right: auto; }
+.diary-header-actions { margin-left: auto; }
+.diary-toolbar {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  padding: 12px 16px; flex-wrap: wrap; background: var(--surface-alt); border-bottom: 1px solid var(--border);
+}
+.seg { display: inline-flex; background: var(--surface); border: 1px solid var(--border-strong); border-radius: 999px; padding: 3px; }
+.seg-btn {
+  border: none; background: transparent; color: var(--text-2); font-family: var(--sans);
+  font-size: 0.78rem; padding: 6px 12px; border-radius: 999px; cursor: pointer; transition: all 0.2s; white-space: nowrap;
+}
+.seg-btn.active { background: var(--health); color: #fff; box-shadow: var(--shadow-sm); }
+
+.diary-viewer { position: relative; overflow: hidden; height: 420px; touch-action: pan-y; }
+.diary-viewer.dir-y { touch-action: pan-x; }
+.diary-track { display: flex; height: 100%; transition: transform 0.38s cubic-bezier(.22,.61,.36,1); will-change: transform; }
+.diary-viewer.dir-x .diary-track { flex-direction: row; }
+.diary-viewer.dir-y .diary-track { flex-direction: column; }
+.diary-slide {
+  flex: 0 0 100%; height: 100%; box-sizing: border-box; overflow-y: auto;
+  padding: 20px 24px; display: flex; flex-direction: column; gap: 10px;
+}
+.diary-slide-date { font-family: var(--serif); font-size: 1.05rem; font-weight: 600; color: var(--text); }
+.diary-slide-week { font-size: 0.8rem; color: var(--health); margin-left: 8px; }
+.diary-slide-body { font-size: 0.92rem; line-height: 1.75; color: var(--text); word-break: break-word; }
+.diary-slide-body p { margin: 0 0 10px; }
+.diary-slide-body:empty::before { content: '（空白日记）'; color: var(--text-3); }
+.diary-slide-empty { margin: auto; text-align: center; color: var(--text-3); }
+.diary-slide-empty .empty-icon { font-size: 2.4rem; margin-bottom: 8px; }
+.diary-nav {
+  position: absolute; top: 50%; transform: translateY(-50%); width: 38px; height: 38px; border-radius: 50%;
+  border: none; background: rgba(255,255,255,0.9); color: var(--text); font-size: 1.4rem; line-height: 1;
+  box-shadow: var(--shadow-md); cursor: pointer; z-index: 3; display: flex; align-items: center; justify-content: center;
+}
+.diary-nav.prev { left: 10px; }
+.diary-nav.next { right: 10px; }
+.diary-viewer.dir-y .diary-nav.prev { left: 50%; top: 14px; transform: translateX(-50%) rotate(-90deg); }
+.diary-viewer.dir-y .diary-nav.next { left: 50%; top: auto; bottom: 14px; transform: translateX(-50%) rotate(-90deg); }
+.diary-nav[disabled] { opacity: 0.25; pointer-events: none; }
+.diary-foot { display: flex; align-items: center; gap: 10px; padding: 10px 16px; border-top: 1px solid var(--border); background: var(--surface-alt); }
+.diary-index { font-size: 0.78rem; color: var(--text-2); }
+.diary-dots { display: flex; gap: 6px; flex: 1; justify-content: center; flex-wrap: wrap; }
+.diary-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--border-strong); cursor: pointer; transition: all 0.2s; }
+.diary-dot.active { background: var(--health); transform: scale(1.25); }
+
+/* Diary editor modal */
+.diary-modal { max-width: 560px; width: 94%; padding: 0; overflow: hidden; }
+.diary-modal-head { display: flex; align-items: center; gap: 10px; padding: 16px 18px; border-bottom: 1px solid var(--border); }
+.diary-date-chip {
+  display: inline-flex; align-items: baseline; gap: 8px; border: 1px solid var(--health); background: var(--health-bg);
+  color: var(--health); border-radius: 999px; padding: 8px 16px; cursor: pointer; font-family: var(--serif); transition: all 0.2s;
+}
+.diary-date-chip:hover { box-shadow: var(--shadow-sm); }
+#diaryDateLabel { font-size: 1.05rem; font-weight: 600; }
+.diary-weekday { font-size: 0.8rem; }
+.diary-date-input { position: absolute; opacity: 0; width: 1px; height: 1px; pointer-events: none; }
+.diary-editor-toolbar { display: flex; align-items: center; gap: 6px; padding: 12px 16px; flex-wrap: wrap; background: var(--surface-alt); border-bottom: 1px solid var(--border); }
+.toolbar-sep { width: 1px; height: 20px; background: var(--border-strong); margin: 0 4px; }
+.shape-label { font-size: 0.76rem; color: var(--text-2); }
+.shape-btn { border: 1px solid var(--border-strong); background: var(--surface); color: var(--text-2); border-radius: 999px; padding: 5px 10px; font-size: 0.76rem; cursor: pointer; transition: all 0.2s; }
+.shape-btn.active { border-color: var(--health); color: var(--health); background: var(--health-bg); }
+.diary-editor {
+  min-height: 240px; max-height: 46vh; overflow-y: auto; padding: 18px 20px; font-size: 0.95rem; line-height: 1.8;
+  color: var(--text); outline: none;
+}
+.diary-editor:empty::before { content: attr(data-placeholder); color: var(--text-3); }
+.diary-editor p { margin: 0 0 10px; }
+.diary-modal-foot { display: flex; align-items: center; gap: 8px; padding: 14px 18px; border-top: 1px solid var(--border); }
+
+/* Diary images shapes */
+.diary-slide-body figure.dimg, .diary-editor figure.dimg {
+  margin: 10px 0; display: inline-block; vertical-align: top; max-width: 100%;
+}
+.diary-slide-body figure.dimg img, .diary-editor figure.dimg img {
+  display: block; width: 200px; max-width: 80%; height: auto; object-fit: cover; background: var(--surface-alt);
+  border: 1px solid var(--border);
+}
+figure.dimg.shape-circle img { border-radius: 50%; width: 160px; height: 160px; }
+figure.dimg.shape-rounded img { border-radius: 18px; width: 220px; }
+figure.dimg.shape-long img { border-radius: 22px; width: 100%; max-width: 100%; aspect-ratio: 16 / 9; height: auto; }
+figure.dimg.shape-square img { border-radius: 8px; width: 180px; height: 180px; }
+figure.dimg.selected img { outline: 3px solid var(--health); outline-offset: 2px; }
+.diary-slide-body .dimg-grid { display: flex; flex-wrap: wrap; gap: 10px; }
+.diary-slide-body .dimg-grid figure.dimg { margin: 0; }
+@media (max-width: 480px) {
+  .diary-viewer { height: 380px; }
+  .diary-date-chip { padding: 6px 12px; }
+}
+
+/* Diary search */
+.diary-search { display: flex; align-items: center; gap: 6px; flex: 1; min-width: 160px; }
+.diary-search-input {
+  flex: 1; border: 1px solid var(--border-strong); background: var(--surface); border-radius: 999px;
+  padding: 8px 14px; font-size: 0.82rem; color: var(--text); font-family: var(--sans); cursor: pointer; min-width: 0;
+}
+.diary-search-input::placeholder { color: var(--text-3); }
+.diary-search-cal {
+  flex: none; width: 38px; height: 38px; border-radius: 50%; border: 1px solid var(--border-strong);
+  background: var(--surface); font-size: 1.05rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s;
+}
+.diary-search-cal:hover { background: var(--health-bg); border-color: var(--health); }
+
+.diary-search-modal { max-width: 560px; width: 94%; max-height: 86vh; overflow-y: auto; padding: 0; }
+.diary-search-bar { display: flex; align-items: center; gap: 8px; padding: 12px 16px; border-bottom: 1px solid var(--border); }
+.diary-search-query {
+  flex: 1; border: 1px solid var(--border-strong); background: var(--surface); border-radius: 12px;
+  padding: 10px 14px; font-size: 0.9rem; color: var(--text); font-family: var(--sans);
+}
+.diary-search-query::placeholder { color: var(--text-3); }
+
+.diary-cal { padding: 12px 16px; border-bottom: 1px solid var(--border); background: var(--surface-alt); }
+.diary-cal-nav { display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 8px; }
+.diary-cal-label { font-family: var(--serif); font-size: 0.95rem; font-weight: 600; color: var(--text); min-width: 110px; text-align: center; }
+.diary-cal-week { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; margin-bottom: 4px; }
+.diary-cal-week span { text-align: center; font-size: 0.72rem; color: var(--text-3); padding: 2px 0; }
+.diary-cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; }
+.diary-cal-cell {
+  aspect-ratio: 1; display: flex; align-items: center; justify-content: center; border-radius: 8px;
+  font-size: 0.8rem; color: var(--text-2); cursor: pointer; border: 1px solid transparent; transition: all 0.15s;
+}
+.diary-cal-cell.has-diary { background: var(--health-bg); color: var(--health); font-weight: 600; }
+.diary-cal-cell.today { border-color: var(--health); }
+.diary-cal-cell.selected { background: var(--health); color: #fff; }
+.diary-cal-cell.empty { cursor: default; }
+
+.diary-search-results { padding: 12px 16px; min-height: 60px; }
+.diary-search-result {
+  display: block; width: 100%; text-align: left; border: 1px solid var(--border); background: var(--surface);
+  border-radius: 12px; padding: 10px 14px; margin-bottom: 10px; cursor: pointer; transition: all 0.15s;
+}
+.diary-search-result:hover { border-color: var(--health); box-shadow: var(--shadow-sm); }
+.diary-search-result-date { font-family: var(--serif); font-size: 0.85rem; font-weight: 600; color: var(--health); margin-bottom: 4px; }
+.diary-search-result-text { font-size: 0.84rem; color: var(--text-2); line-height: 1.55; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.diary-search-empty { text-align: center; color: var(--text-3); padding: 24px 0; font-size: 0.88rem; }
+</style>
+</head>
+<body>
+<!-- ===== Sidebar（桌面端） ===== -->
+<aside class="sidebar">
+  <div class="brand">
+    <div class="brand-mark">咕</div>
+    <div>
+      <div class="brand-name">咕嘎管家</div>
+      <div class="brand-tagline">Time · Focus · Wellness</div>
+    </div>
+  </div>
+  <nav class="side-nav" aria-label="主导航">
+    <div class="nav-label">功能模块</div>
+    <button class="nav-item active" data-tab="time">
+      <span class="nav-icon">🕐</span> 时间管理
+    </button>
+    <button class="nav-item" data-tab="schedule">
+      <span class="nav-icon">📅</span> 日程安排
+    </button>
+    <button class="nav-item" data-tab="health">
+      <span class="nav-icon">🌿</span> 健康生活
+    </button>
+    <button class="nav-item" data-tab="hot">
+      <span class="nav-icon">🔥</span> 热点日报
+    </button>
+    <button class="nav-item" data-tab="ai">
+      <span class="nav-icon">🤖</span> AI资讯
+    </button>
+  </nav>
+  <div class="side-footer">
+    <div class="side-date">
+      <div class="date-main" id="sideDate"></div>
+      <div class="date-sub" id="sideWeekday"></div>
+    </div>
+    <button class="account-btn" id="accountBtnSide" onclick="openAuthModal()">
+      <span class="account-dot"></span><span id="accountLabelSide">未登录</span>
+    </button>
+  </div>
+</aside>
+
+<div class="app">
+  <!-- ===== Header ===== -->
+  <header class="header">
+    <div class="header-left">
+      <h1>咕嘎管家</h1>
+      <div class="subtitle">Time · Focus · Wellness — 你的私人小管家</div>
+    </div>
+    <div class="header-right">
+      <button class="account-btn" id="accountBtn" onclick="openAuthModal()">
+        <span class="account-dot"></span><span id="accountLabel">未登录</span>
+      </button>
+      <div class="header-date">
+        <div class="date-main" id="headerDate"></div>
+        <div class="date-sub" id="headerWeekday"></div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ===== Navigation ===== -->
+  <nav class="nav">
+    <button class="nav-item active" data-tab="time">
+      <span class="nav-icon">🕐</span> 时间管理
+    </button>
+    <button class="nav-item" data-tab="schedule">
+      <span class="nav-icon">📅</span> 日程安排
+    </button>
+    <button class="nav-item" data-tab="health">
+      <span class="nav-icon">🌿</span> 健康生活
+    </button>
+    <button class="nav-item" data-tab="hot">
+      <span class="nav-icon">🔥</span> 热点日报
+    </button>
+    <button class="nav-item" data-tab="ai">
+      <span class="nav-icon">🤖</span> AI资讯
+    </button>
+  </nav>
+
+  <!-- ===== Time Management View ===== -->
+  <section class="view active" id="view-time">
+    <div class="module-layout">
+      <div class="sticky-col">
+        <!-- Clock -->
+        <div class="clock-card">
+          <div class="clock-time" id="clockTime">00:00<span class="seconds" id="clockSeconds">:00</span></div>
+          <div class="clock-date" id="clockDate"></div>
+          <div class="clock-greeting" id="clockGreeting"></div>
+        </div>
+      </div>
+
+      <div class="main-col">
+        <!-- Pomodoro Timer -->
+        <div class="pomodoro-card">
+          <div class="pomodoro-label">番茄工作法 · 45分钟专注循环</div>
+          <div class="pomodoro-phase" id="pomodoroPhase">
+            <span class="phase-dot"></span>
+            <span id="phaseText">准备开始</span>
+          </div>
+          <div class="pomodoro-ring" id="pomodoroRing">
+            <svg width="200" height="200" viewBox="0 0 200 200">
+              <circle class="ring-bg" cx="100" cy="100" r="92"></circle>
+              <circle class="ring-progress" id="ringProgress" cx="100" cy="100" r="92"
+                stroke-dasharray="578.05" stroke-dashoffset="0"></circle>
+            </svg>
+            <div class="pomodoro-time" id="pomodoroTime">45:00</div>
+          </div>
+          <div class="pomodoro-controls">
+            <button class="btn btn-primary btn-sm" id="pomoStart">开始专注</button>
+            <button class="btn btn-secondary btn-sm" id="pomoPause" style="display:none">暂停</button>
+            <button class="btn btn-ghost btn-sm" id="pomoReset">重置</button>
+          </div>
+          <div class="pomodoro-stats">
+            <span>已完成循环：<strong id="pomoCycles">0</strong></span>
+            <span>累计专注：<strong id="pomoTotalMin">0</strong> 分钟</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Schedule View（日程统筹） ===== -->
+  <section class="view" id="view-schedule">
+    <div class="module-layout">
+      <div class="sticky-col">
+        <!-- 日历 + 打卡 -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">📅 日历</div>
+            <div class="card-subtitle">轻点某一天，记录当日打卡与心情</div>
+          </div>
+          <div class="cal-head">
+            <button class="btn-icon" id="calPrev" title="上个月">‹</button>
+            <div class="cal-title" id="calTitle"></div>
+            <button class="btn-icon" id="calNext" title="下个月">›</button>
+          </div>
+          <div class="cal-weekdays">
+            <span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span>
+          </div>
+          <div class="cal-grid" id="calGrid"></div>
+          <div class="cal-note-area" id="calNoteArea" style="display:none">
+            <div class="cal-note-date" id="calNoteDate"></div>
+            <textarea id="calNoteInput" rows="3" placeholder="记录这一天的行为、心得或待办事项…"></textarea>
+            <div class="cal-note-actions">
+              <button class="btn btn-sm" style="background:var(--schedule);color:white" onclick="saveCalNote()">💾 保存</button>
+              <button class="btn btn-sm" onclick="closeCalNote()">取消</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 完成概览 -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">📊 完成概览</div>
+            <div class="card-subtitle">每天一点点，积少成多</div>
+          </div>
+          <div class="work-stats">
+            <div class="stat-item">
+              <div class="stat-value work-color" id="statWorkTotal">0</div>
+              <div class="stat-label">总任务</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value done-color" id="statDone">0</div>
+              <div class="stat-label">已完成</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value" id="statPending" style="color:var(--time)">0</div>
+              <div class="stat-label">待完成</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value" id="statRate" style="color:var(--text)">0%</div>
+              <div class="stat-label">完成率</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="main-col">
+        <!-- 今日日程 -->
+        <div class="card schedule-card">
+          <div class="card-header">
+            <div class="card-title">🗓️ 今日日程</div>
+            <div class="card-subtitle">随时添加任务，合理规划你的一天</div>
+          </div>
+          <div class="schedule-add">
+            <input type="time" id="schedTime" value="09:00">
+            <input type="text" id="schedContent" placeholder="输入任务内容，如：写周报、背单词 50 个..." onkeydown="if(event.key==='Enter')addSchedule()">
+            <button class="btn btn-primary btn-sm" onclick="addSchedule()">+ 添加</button>
+          </div>
+          <div class="schedule-list" id="scheduleList"></div>
+        </div>
+
+        <!-- 目标清单 -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">🎯 目标清单</div>
+            <div class="card-subtitle">把想做成的事写下来，每天完成一点，最终都会实现</div>
+          </div>
+          <div class="work-add-bar">
+            <input type="text" id="workTitle" placeholder="工作学习目标..." style="flex:2;min-width:140px" onkeydown="if(event.key==='Enter')addWorkItem()">
+            <input type="date" id="workStart" title="开始日期">
+            <span class="date-sep">—</span>
+            <input type="date" id="workEnd" title="结束日期">
+            <button class="btn btn-sm" style="background:var(--schedule);color:white" onclick="addWorkItem()">+ 添加</button>
+          </div>
+          <div id="workList"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Healthy Living View ===== -->
+  <section class="view" id="view-health">
+    <div class="module-layout">
+      <div class="sticky-col">
+        <!-- Reminder settings (self-managed task bar) -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">⏰ 健康提醒</div>
+            <div class="card-subtitle">按时吃饭、适度运动，别把年轻当作挥霍的本钱</div>
+          </div>
+          <div class="reminder-add">
+            <input type="time" id="remindTime" value="12:00">
+            <input type="text" id="remindContent" placeholder="提醒内容，如：喝杯温水、做眼保健操…" onkeydown="if(event.key==='Enter')addReminder()">
+            <button class="btn btn-sm" style="background:var(--health);color:white" onclick="addReminder()">+ 添加</button>
+          </div>
+          <div class="reminder-list" id="reminderList"></div>
+          <div class="reminder-hint">健康生活从养成一个好习惯开始</div>
+        </div>
+      </div>
+
+      <div class="main-col">
+        <!-- Hero -->
+        <div class="health-hero">
+          <div class="health-hero-glow"></div>
+          <div class="health-hero-main">
+            <div class="health-hero-title">照顾好自己，是今天最重要的事</div>
+            <div class="health-hero-sub">按时吃饭，适度运动，把健康过成日常里的小确幸 🌿</div>
+          </div>
+          <div class="health-hero-stats">
+            <div class="hstat"><div class="hstat-v" id="hStatMeal">0</div><div class="hstat-l">今日日记</div></div>
+            <div class="hstat"><div class="hstat-v" id="hStatExer">0</div><div class="hstat-l">图文</div></div>
+            <div class="hstat"><div class="hstat-v" id="hStatStreak">0</div><div class="hstat-l">记录天数</div></div>
+          </div>
+        </div>
+
+        <!-- Daily Records (merged diet + exercise into diary) -->
+        <div class="card diary-card">
+      <div class="card-header diary-header">
+        <div class="card-title">📖 日常记录</div>
+        <div class="card-subtitle">记录美好生活，从此刻开始</div>
+        <div class="diary-header-actions">
+          <button class="btn btn-sm" style="background:var(--health);color:white" onclick="newDiary()">+ 新建日记</button>
+        </div>
+      </div>
+      <div class="diary-toolbar">
+        <div class="seg" id="diaryViewMode">
+          <button class="seg-btn active" data-mode="all" onclick="setDiaryViewMode('all')">全部</button>
+          <button class="seg-btn" data-mode="text" onclick="setDiaryViewMode('text')">仅文字</button>
+          <button class="seg-btn" data-mode="img" onclick="setDiaryViewMode('img')">仅图片</button>
+        </div>
+        <div class="diary-search">
+          <input type="text" class="diary-search-input" id="diarySearchBox" placeholder="🔍 搜索日记（月份或关键字）" readonly onclick="openDiarySearch()">
+          <button class="diary-search-cal" onclick="openDiarySearch()" aria-label="按日期查找">📅</button>
+        </div>
+      </div>
+      <div class="diary-viewer dir-x" id="diaryViewer">
+        <div class="diary-track" id="diaryTrack"></div>
+        <button class="diary-nav prev" id="diaryPrev" onclick="diaryStep(-1)">‹</button>
+        <button class="diary-nav next" id="diaryNext" onclick="diaryStep(1)">›</button>
+      </div>
+      <div class="diary-foot">
+        <span class="diary-index" id="diaryIndex"></span>
+        <div class="diary-dots" id="diaryDots"></div>
+        <button class="btn btn-sm btn-ghost" onclick="editCurrentDiary()">✏️ 编辑当前</button>
+      </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Hotspot Daily View（热点日报） ===== -->
+  <section class="view" id="view-hot">
+    <div class="hot-hero">
+      <div class="hot-hero-glow"></div>
+      <div class="hot-hero-main">
+        <div class="hot-hero-title">今日热点日报</div>
+        <div class="hot-hero-sub">抖音热榜 × 小红书热门，一站看尽今天在聊什么 🔥</div>
+      </div>
+      <div class="hot-hero-meta" id="hotUpdated"></div>
+    </div>
+    <div class="module-layout">
+      <div class="sticky-col">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">🧭 今日速览</div>
+            <div class="card-subtitle">跨平台热点趋势汇总</div>
+          </div>
+          <div class="hot-brief" id="hotBrief"></div>
+        </div>
+      </div>
+      <div class="main-col">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">🎵 抖音热榜</div>
+            <div class="card-subtitle">实时热搜词条</div>
+          </div>
+          <div class="hot-list" id="douyinHotList"></div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">📕 小红书热门</div>
+            <div class="card-subtitle">互动 1000+ 的爆款笔记</div>
+          </div>
+          <div class="hot-list" id="xhsHotList"></div>
+        </div>
+      </div>
+    </div>
+    <div class="ai-attrib" id="hotAttrib"></div>
+  </section>
+
+  <!-- ===== AI Hotspot View ===== -->
+  <section class="view" id="view-ai">
+    <div class="module-layout">
+      <div class="sticky-col">
+        <!-- My Collection -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">📌 我的收藏</div>
+            <div class="card-subtitle">碰到感兴趣的内容就收藏一下吧</div>
+          </div>
+          <div class="ai-collection-add">
+            <input type="text" id="collTitle" placeholder="标题（可选）">
+            <textarea id="collContent" placeholder="在此粘贴你阅读到的 AI 热点内容，或手动输入笔记…" onkeydown="if(event.key==='Enter'&&(event.ctrlKey||event.metaKey))addCollection()"></textarea>
+            <div class="add-actions">
+              <button class="btn btn-secondary btn-sm" onclick="clearCollInput()">清空</button>
+              <button class="btn btn-primary btn-sm" style="background:var(--ai)" onclick="addCollection()">💾 保存收藏</button>
+            </div>
+          </div>
+          <div class="ai-collection-list" id="collList"></div>
+        </div>
+      </div>
+
+      <div class="main-col">
+        <!-- AI 日报 -->
+        <div class="card ai-daily-card">
+          <div class="card-header">
+            <div class="card-title">📰 AI 日报</div>
+            <div class="card-subtitle" id="aiDailySub">今日 AI 大事速览，点击标题直达原文</div>
+          </div>
+          <div class="ai-daily-body" id="aiDailyBody">
+            <div class="empty-state"><div class="empty-icon">📰</div>正在生成今日 AI 日报…</div>
+          </div>
+        </div>
+
+        <!-- News Feed -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">🤖 AI 热点资讯</div>
+            <div class="card-subtitle">每日精选，可复制收藏</div>
+          </div>
+          <div class="ai-toolbar">
+            <div class="ai-toolbar-left">
+              <button class="btn btn-primary btn-sm" style="background:var(--ai)" id="aiFetchBtn" onclick="fetchAIHot({force:true})">🔄 刷新</button>
+              <span class="ai-updated" id="aiUpdated"></span>
+            </div>
+          </div>
+          <div class="ai-news-list" id="aiNewsList">
+            <div class="empty-state">
+              <div class="empty-icon">📡</div>
+              正在自动加载今日 AI 热点资讯…
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ai-attrib">
+      资讯来源：<a href="https://aihot.news" target="_blank" rel="noopener">AI HOT</a> · 点击资讯标题可查看原文 · 数据为公开资讯，引用请以原文为准
+    </div>
+  </section>
+</div>
+
+<!-- ===== Modal ===== -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-icon" id="modalIcon">☕</div>
+    <div class="modal-title" id="modalTitle">休息时间到！</div>
+    <div class="modal-message" id="modalMessage">你已经专注了 45 分钟，起来活动一下吧！10 分钟后继续。</div>
+    <div class="modal-actions">
+      <button class="btn btn-primary btn-sm" id="modalConfirm">好的</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Diary Editor Modal ===== -->
+<div class="modal-overlay" id="diaryModalOverlay">
+  <div class="modal diary-modal">
+    <div class="diary-modal-head">
+      <button class="diary-date-chip" id="diaryDateChip" onclick="openDatePicker()">
+        <span id="diaryDateLabel">8月16日</span>
+        <span class="diary-weekday" id="diaryWeekday">星期日</span>
+      </button>
+      <input type="date" id="diaryDateInput" class="diary-date-input" onchange="onDiaryDateChange()">
+      <div style="flex:1"></div>
+      <button class="btn-icon" onclick="closeDiaryModal()">✕</button>
+    </div>
+    <div class="diary-editor-toolbar">
+      <button class="btn btn-sm" onclick="insertDiaryImage('upload')">📷 上传图片</button>
+      <button class="btn btn-sm" onclick="insertDiaryImage('camera')">📸 拍照</button>
+      <span class="toolbar-sep"></span>
+      <span class="shape-label">形状</span>
+      <button class="shape-btn active" data-shape="circle" onclick="setDiaryShape('circle')">● 圆形</button>
+      <button class="shape-btn" data-shape="long" onclick="setDiaryShape('long')">▭ 长框</button>
+      <button class="shape-btn" data-shape="rounded" onclick="setDiaryShape('rounded')">▢ 圆角</button>
+      <button class="shape-btn" data-shape="square" onclick="setDiaryShape('square')">■ 方形</button>
+      <input type="file" id="diaryFileInput" accept="image/*" style="display:none" onchange="onDiaryFilePicked(event)">
+      <input type="file" id="diaryCamInput" accept="image/*" capture="environment" style="display:none" onchange="onDiaryFilePicked(event)">
+    </div>
+    <div class="diary-editor" id="diaryEditor" contenteditable="true" data-placeholder="写下今天的生活、美食、旅行、人文或趣事…"></div>
+    <div class="diary-modal-foot">
+      <button class="btn btn-sm btn-ghost" onclick="deleteCurrentDiary()">🗑 删除</button>
+      <div style="flex:1"></div>
+      <button class="btn btn-sm" onclick="closeDiaryModal()">取消</button>
+      <button class="btn btn-sm" style="background:var(--health);color:white" onclick="saveDiary()">💾 保存日记</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Diary Search Modal ===== -->
+<div class="modal-overlay" id="diarySearchOverlay">
+  <div class="modal diary-search-modal">
+    <div class="diary-modal-head">
+      <div class="card-title" style="font-size:1.05rem">🔍 搜索日记</div>
+      <button class="btn-icon" onclick="closeDiarySearch()">✕</button>
+    </div>
+    <div class="diary-search-bar">
+      <input type="text" id="diarySearchQuery" class="diary-search-query" placeholder="输入月份（如 8月、2026-08）或关键字…" oninput="doDiarySearch()">
+      <button class="btn-icon" id="diarySearchCalBtn" onclick="toggleDiaryCal()" aria-label="日历">📅</button>
+    </div>
+    <div class="diary-cal" id="diaryCal" style="display:none">
+      <div class="diary-cal-nav">
+        <button class="btn-icon" onclick="diaryCalStep(-1)">‹</button>
+        <span class="diary-cal-label" id="diaryCalLabel"></span>
+        <button class="btn-icon" onclick="diaryCalStep(1)">›</button>
+      </div>
+      <div class="diary-cal-week">
+        <span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span>
+      </div>
+      <div class="diary-cal-grid" id="diaryCalGrid"></div>
+    </div>
+    <div class="diary-search-results" id="diarySearchResults"></div>
+  </div>
+</div>
+
+<!-- ===== Account / Auth Modal ===== -->
+<div class="modal-overlay" id="authOverlay">
+  <div class="modal auth-modal">
+    <div class="auth-head">
+      <div class="card-title" id="authTitle">登录咕嘎管家</div>
+      <button class="btn-icon" onclick="closeAuthModal()">✕</button>
+    </div>
+    <div id="authForms">
+      <div class="auth-tabs" id="authTabs">
+        <button class="auth-tab active" data-tab="password" onclick="switchAuthTab('password')">密码登录</button>
+        <button class="auth-tab" data-tab="code" onclick="switchAuthTab('code')">验证码登录</button>
+        <button class="auth-tab" data-tab="signup" onclick="switchAuthTab('signup')">注册</button>
+      </div>
+      <div class="auth-field"><input class="auth-input" id="authEmail" type="email" placeholder="邮箱" autocomplete="email"></div>
+      <div class="auth-field" id="authPwdField"><input class="auth-input" id="authPassword" type="password" placeholder="密码（至少 6 位）" autocomplete="current-password"></div>
+      <div class="auth-field" id="authCodeField" style="display:none">
+        <div class="auth-row">
+          <input class="auth-input" id="authCode" placeholder="6 位邮箱验证码">
+          <button class="btn btn-sm" id="authSendCode" onclick="sendAuthCode()">获取验证码</button>
+        </div>
+      </div>
+      <button class="auth-btn" id="authSubmit" onclick="submitAuth()">登录</button>
+      <div class="auth-link" id="authForgot" onclick="switchAuthTab('forgot')">忘记密码？</div>
+      <div class="auth-msg" id="authMsg"></div>
+    </div>
+    <div class="auth-signed" id="authSigned" style="display:none">
+      <div class="auth-user" id="authUserEmail"></div>
+      <div class="auth-note">已开启云端同步。任何设备登录这个账号，内容都会与上次操作结束时保持一致。</div>
+      <div class="auth-note" id="authSyncState"></div>
+      <button class="auth-btn" style="background:var(--text-3)" onclick="signOutCloud()">退出登录</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Sync Conflict Modal ===== -->
+<div class="modal-overlay" id="syncOverlay">
+  <div class="modal" style="max-width:440px">
+    <div class="card-title" style="font-size:1.05rem;margin-bottom:10px">选择要保留的数据</div>
+    <div class="sync-note" id="syncNote"></div>
+    <button class="sync-opt" onclick="resolveConflict('cloud')">
+      <div class="sync-opt-title">用云端数据覆盖本机</div>
+      <div class="sync-opt-desc" id="syncCloudDesc"></div>
+    </button>
+    <button class="sync-opt" onclick="resolveConflict('local')">
+      <div class="sync-opt-title">用本机数据上传到云端</div>
+      <div class="sync-opt-desc" id="syncLocalDesc"></div>
+    </button>
+  </div>
+</div>
+
+<!-- ===== Toast ===== -->
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============================================================
+   咕嘎管家 — 核心逻辑
+   ============================================================ */
+
+const todayKey = () => new Date().toISOString().slice(0, 10);
+const STORAGE_PREFIX = 'wla_';
+
+/* ===== 自建后端 API 客户端 =====
+   替代原 WorkBuddy Cloud SDK，通过同源 REST API 与自建服务通信。
+   由 nginx 将 /api 反代到后端服务，因此前后端同源、无跨域问题。 */
+const API = {
+  base: '/api',
+  token: null,
+  _loadToken() {
+    try { this.token = localStorage.getItem('guga_token') || null; } catch (e) { this.token = null; }
+  },
+  setToken(t) {
+    this.token = t || null;
+    try { if (t) localStorage.setItem('guga_token', t); else localStorage.removeItem('guga_token'); } catch (e) {}
+  },
+  async request(method, path, body, isForm) {
+    const headers = {};
+    if (this.token) headers['Authorization'] = 'Bearer ' + this.token;
+    const opts = { method, headers };
+    if (body !== undefined) {
+      if (isForm) { opts.body = body; }
+      else { headers['Content-Type'] = 'application/json'; opts.body = JSON.stringify(body); }
+    }
+    const res = await fetch(this.base + path, opts);
+    let data = {};
+    try { data = await res.json(); } catch (e) {}
+    if (!res.ok) { const err = new Error(data.error || ('请求失败 ' + res.status)); err.status = res.status; throw err; }
+    return data;
+  },
+  // 认证
+  register(email, password) { return this.request('POST', '/auth/register', { email, password }); },
+  login(email, password) { return this.request('POST', '/auth/login', { email, password }); },
+  sendOtp(email) { return this.request('POST', '/auth/otp/send', { email }); },
+  verifyOtp(email, code) { return this.request('POST', '/auth/otp/verify', { email, code }); },
+  resetPassword(email) { return this.request('POST', '/auth/reset-password', { email }); },
+  resetPasswordConfirm(email, code, newPassword) { return this.request('POST', '/auth/reset-password/confirm', { email, code, newPassword }); },
+  me() { return this.request('GET', '/auth/me'); },
+  logout() { return this.request('POST', '/auth/logout'); },
+  // 数据
+  getState() { return this.request('GET', '/state'); },
+  putState(payload) { return this.request('PUT', '/state', { payload }); },
+  getDiaries() { return this.request('GET', '/diaries'); },
+  upsertDiary(clientId, payload) { return this.request('PUT', '/diaries/' + encodeURIComponent(clientId), payload); },
+  deleteDiary(clientId) { return this.request('DELETE', '/diaries/' + encodeURIComponent(clientId)); },
+  deleteDiaryById(id) { return this.request('DELETE', '/diaries-id/' + encodeURIComponent(String(id))); },
+  // 文件
+  async uploadImage(blob) {
+    const fd = new FormData();
+    fd.append('file', blob, 'image.jpg');
+    return this.request('POST', '/upload', fd, true);
+  }
+};
+
+let cloudSession = null;   // { user: { id, email } }，登录后设置
+let cloudUserId = null;    // 数字用户 id
+let cloudSyncing = false;
+let syncTimer = null;
+
+function getData(key) {
+  try { return JSON.parse(localStorage.getItem(STORAGE_PREFIX + key) || '[]'); }
+  catch { return []; }
+}
+function saveData(key, data) {
+  localStorage.setItem(STORAGE_PREFIX + key, JSON.stringify(data));
+  markDirty(key);
+}
+function getObject(key) {
+  try { return JSON.parse(localStorage.getItem(STORAGE_PREFIX + key) || '{}'); }
+  catch { return {}; }
+}
+function saveObject(key, obj) {
+  localStorage.setItem(STORAGE_PREFIX + key, JSON.stringify(obj));
+  markDirty(key);
+}
+
+/* ===== Navigation ===== */
+document.querySelectorAll('.nav-item').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const tab = btn.dataset.tab;
+    document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    document.getElementById('view-' + tab).classList.add('active');
+    if (tab === 'ai') fetchAIHot(); // 切到 AI 标签时自动获取当日热点
+    if (tab === 'hot') renderHotDaily(); // 切到热点日报时刷新
+  });
+});
+
+/* ===== Header Date ===== */
+function updateHeaderDate() {
+  const now = new Date();
+  const weekdays = ['星期日','星期一','星期二','星期三','星期四','星期五','星期六'];
+  const dateStr = `${now.getFullYear()}年${now.getMonth() + 1}月${now.getDate()}日`;
+  const weekStr = weekdays[now.getDay()];
+  const dMain = document.getElementById('headerDate');
+  const dSub = document.getElementById('headerWeekday');
+  if (dMain) dMain.textContent = dateStr;
+  if (dSub) dSub.textContent = weekStr;
+  const sMain = document.getElementById('sideDate');
+  const sSub = document.getElementById('sideWeekday');
+  if (sMain) sMain.textContent = dateStr;
+  if (sSub) sSub.textContent = weekStr;
+}
+
+/* ===== Clock ===== */
+function updateClock() {
+  const now = new Date();
+  const h = String(now.getHours()).padStart(2, '0');
+  const m = String(now.getMinutes()).padStart(2, '0');
+  const s = String(now.getSeconds()).padStart(2, '0');
+  document.getElementById('clockTime').innerHTML = `${h}:${m}<span class="seconds">:${s}</span>`;
+
+  const weekdays = ['星期日','星期一','星期二','星期三','星期四','星期五','星期六'];
+  document.getElementById('clockDate').textContent =
+    `${now.getFullYear()}年${now.getMonth()+1}月${now.getDate()}日 · ${weekdays[now.getDay()]}`;
+
+  const hr = now.getHours();
+  let greeting;
+  if (hr < 6) greeting = '夜深了，注意休息 🌙';
+  else if (hr < 9) greeting = '早安，新的一天开始了 ☀️';
+  else if (hr < 12) greeting = '上午好，保持专注 💪';
+  else if (hr < 14) greeting = '中午好，记得吃午饭 🍱';
+  else if (hr < 18) greeting = '下午好，继续加油 🌤️';
+  else if (hr < 22) greeting = '晚上好，辛苦了 🌆';
+  else greeting = '夜深了，早点休息 🌙';
+  document.getElementById('clockGreeting').textContent = greeting;
+}
+
+/* ===== Pomodoro Timer ===== */
+const WORK_MIN = 45;
+const BREAK_MIN = 10;
+const RING_CIRCUM = 2 * Math.PI * 92;
+
+let pomoState = {
+  running: false,
+  isBreak: false,
+  remaining: WORK_MIN * 60,
+  total: WORK_MIN * 60,
+  cycles: 0,
+  totalMinutes: 0,
+  endAt: 0,        // 绝对结束时间戳(ms)，运行中有效——息屏/后台节流恢复后仍能正确计算剩余
+  notifiedEndAt: 0, // 已发过提醒的 endAt，防止页面恢复前台时与 SW 通知重复触发
+  intervalId: null,
+  wakeLock: null
+};
+
+function loadPomoStats() {
+  const stats = getObject('pomo_stats');
+  pomoState.cycles = stats.cycles || 0;
+  pomoState.totalMinutes = stats.totalMinutes || 0;
+  document.getElementById('pomoCycles').textContent = pomoState.cycles;
+  document.getElementById('pomoTotalMin').textContent = pomoState.totalMinutes;
+}
+
+function savePomoStats() {
+  saveObject('pomo_stats', { cycles: pomoState.cycles, totalMinutes: pomoState.totalMinutes });
+}
+
+function updatePomoDisplay() {
+  const min = Math.floor(pomoState.remaining / 60);
+  const sec = pomoState.remaining % 60;
+  document.getElementById('pomodoroTime').textContent =
+    `${String(min).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
+
+  const progress = 1 - pomoState.remaining / pomoState.total;
+  const offset = RING_CIRCUM * progress;
+  document.getElementById('ringProgress').style.strokeDashoffset = offset;
+
+  const ring = document.getElementById('pomodoroRing');
+  const phase = document.getElementById('pomodoroPhase');
+  if (pomoState.isBreak) {
+    ring.classList.add('break');
+    phase.classList.add('break');
+    document.getElementById('phaseText').textContent = pomoState.running ? '休息中 ☕' : '休息时间';
+  } else {
+    ring.classList.remove('break');
+    phase.classList.remove('break');
+    document.getElementById('phaseText').textContent = pomoState.running ? '专注中 🎯' : (pomoState.cycles > 0 ? '准备下一轮' : '准备开始');
+  }
+}
+
+function pomoTick() {
+  if (!pomoState.running) return;
+
+  // 基于绝对结束时间戳计算剩余：即使 setInterval 被后台节流/暂停，
+  // 重新执行时也能立刻得到正确剩余，息屏回来不会“假死”或累积误差
+  if (pomoState.endAt) {
+    pomoState.remaining = Math.max(0, Math.round((pomoState.endAt - Date.now()) / 1000));
+  }
+
+  if (pomoState.remaining <= 0) {
+    const completedEndAt = pomoState.endAt; // 记录刚结束这一轮的绝对时间戳
+    const enteringBreak = !pomoState.isBreak;
+
+    // 阶段切换：累加统计 + 重置为下一轮的绝对结束点
+    if (!pomoState.isBreak) {
+      pomoState.cycles++;
+      pomoState.totalMinutes += WORK_MIN;
+      savePomoStats();
+      document.getElementById('pomoCycles').textContent = pomoState.cycles;
+      document.getElementById('pomoTotalMin').textContent = pomoState.totalMinutes;
+    }
+    pomoState.isBreak = enteringBreak;
+    pomoState.total = (enteringBreak ? BREAK_MIN : WORK_MIN) * 60;
+    pomoState.remaining = pomoState.total;
+    pomoState.endAt = Date.now() + pomoState.remaining * 1000; // 下一轮绝对结束点
+
+    // 若息屏期间已由 Service Worker 弹过系统通知，则不再重复弹窗/响铃
+    if (pomoState.notifiedEndAt !== completedEndAt) {
+      pomoState.notifiedEndAt = completedEndAt;
+      cancelPomoSW(); // 通知已发，清掉 SW 定时器，避免再次触发
+      if (enteringBreak) {
+        showModal('☕', '休息时间到！', `你已专注 ${WORK_MIN} 分钟，起来活动一下！${BREAK_MIN} 分钟后继续下一个专注循环。`);
+        playBeep();
+        notifyUser('休息时间到！', `专注了 ${WORK_MIN} 分钟，休息 ${BREAK_MIN} 分钟吧 ☕`);
+      } else {
+        showModal('🎯', '专注时间到！', '休息结束，开始下一个 45 分钟专注循环吧！');
+        playBeep();
+        notifyUser('专注时间到！', '开始下一个 45 分钟专注循环 🎯');
+      }
+    }
+
+    // 为「下一轮结束点」预约 SW 系统通知（息屏也能响）
+    scheduleCurrentPhaseEnd();
+    updatePomoDisplay();
+    return;
+  }
+  updatePomoDisplay();
+}
+
+/* 屏幕常亮（Wake Lock）：专注/休息运行中尽量不让手机自动息屏，
+   从源头减少后台节流。不支持的环境或用户手动按电源键息屏时自动降级，不报错。 */
+async function acquireWakeLock() {
+  try {
+    if ('wakeLock' in navigator && !pomoState.wakeLock) {
+      pomoState.wakeLock = await navigator.wakeLock.request('screen');
+      pomoState.wakeLock.addEventListener('release', () => { pomoState.wakeLock = null; });
+    }
+  } catch (e) { /* 不支持或被拒绝则忽略，不影响计时 */ }
+}
+async function releaseWakeLock() {
+  try {
+    if (pomoState.wakeLock) { await pomoState.wakeLock.release(); pomoState.wakeLock = null; }
+  } catch (e) {}
+}
+
+document.getElementById('pomoStart').addEventListener('click', () => {
+  if (!pomoState.running) {
+    pomoState.running = true;
+    pomoState.notifiedEndAt = 0; // 新一轮，允许正常提醒
+    // 以“当前剩余秒数”推算绝对结束点，而非从 0 累加
+    pomoState.endAt = Date.now() + pomoState.remaining * 1000;
+    if (!pomoState.intervalId) {
+      pomoState.intervalId = setInterval(pomoTick, 250);
+    }
+    acquireWakeLock();
+    scheduleCurrentPhaseEnd(); // 把“本轮结束点”交给 SW，息屏也能提醒
+    document.getElementById('pomoStart').style.display = 'none';
+    document.getElementById('pomoPause').style.display = '';
+    updatePomoDisplay();
+  }
+});
+
+document.getElementById('pomoPause').addEventListener('click', () => {
+  if (pomoState.running) {
+    // 暂停时先把剩余从绝对时间反算，避免节流造成的误差
+    if (pomoState.endAt) {
+      pomoState.remaining = Math.max(0, Math.round((pomoState.endAt - Date.now()) / 1000));
+    }
+    pomoState.running = false;
+    pomoState.endAt = 0;
+    pomoState.notifiedEndAt = 0;
+    cancelPomoSW();
+    releaseWakeLock();
+    document.getElementById('pomoStart').style.display = '';
+    document.getElementById('pomoPause').style.display = 'none';
+    document.getElementById('pomoStart').textContent = '继续';
+    updatePomoDisplay();
+  }
+});
+
+document.getElementById('pomoReset').addEventListener('click', () => {
+  pomoState.running = false;
+  pomoState.isBreak = false;
+  pomoState.remaining = WORK_MIN * 60;
+  pomoState.total = WORK_MIN * 60;
+  pomoState.endAt = 0;
+  pomoState.notifiedEndAt = 0;
+  cancelPomoSW();
+  releaseWakeLock();
+  if (pomoState.intervalId) {
+    clearInterval(pomoState.intervalId);
+    pomoState.intervalId = null;
+  }
+  document.getElementById('pomoStart').style.display = '';
+  document.getElementById('pomoPause').style.display = 'none';
+  document.getElementById('pomoStart').textContent = '开始专注';
+  updatePomoDisplay();
+});
+
+/* 息屏/切后台再回到前台：清掉 SW 定时器并延后一拍校正，
+   让 SW 息屏期间发出的 'fired' 消息先落地(写入 notifiedEndAt)，
+   避免回到前台时页面与 SW 重复弹提醒；随后按绝对结束点校正显示与阶段。 */
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden && pomoState.running) {
+    cancelPomoSW();
+    setTimeout(() => {
+      if (pomoState.running) {
+        pomoTick();
+        acquireWakeLock(); // Wake Lock 在页面隐藏时会被浏览器释放，回来重新申请
+      }
+    }, 120);
+  }
+  // 回到前台时补查今日时间安排：息屏期间漏掉的到点提醒在此补发
+  if (!document.hidden) checkScheduleReminders();
+});
+
+/* ===== 番茄钟 notify via Service Worker（基于绝对结束时间戳）===== */
+function pomoNotifyFor(enteringBreak) {
+  return enteringBreak
+    ? { title: '☕ 休息时间到', body: `已专注 ${WORK_MIN} 分钟，起来活动一下，休息 ${BREAK_MIN} 分钟` }
+    : { title: '🎯 专注时间到', body: '休息结束，开始下一个 45 分钟专注循环' };
+}
+function scheduleCurrentPhaseEnd() {
+  if (!pomoState.endAt) return;
+  const n = pomoNotifyFor(pomoState.isBreak); // 当前阶段结束即进入另一阶段
+  schedulePomoSW(pomoState.endAt, n.title, n.body);
+}
+function schedulePomoSW(endAt, title, body, tag) {
+  if (!('serviceWorker' in navigator)) return;
+  navigator.serviceWorker.ready.then((reg) => {
+    if (reg.active) reg.active.postMessage({ type: 'schedule', endAt, title, body, tag: tag || 'pomo' });
+  }).catch(() => {});
+}
+function cancelPomoSW() {
+  if (!('serviceWorker' in navigator)) return;
+  navigator.serviceWorker.ready.then((reg) => {
+    if (reg.active) reg.active.postMessage({ type: 'cancel', tag: 'pomo' });
+  }).catch(() => {});
+}
+// SW 在息屏期间弹过系统通知后回报，页面据此跳过重复弹窗/响铃
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.addEventListener('message', (e) => {
+    if (e.data && e.data.type === 'fired') {
+      if (!e.data.tag || e.data.tag === 'pomo') {
+        pomoState.notifiedEndAt = e.data.endAt;
+      } else if (typeof e.data.tag === 'string' && e.data.tag.startsWith('sched:')) {
+        markScheduleNotified(Number(e.data.tag.slice(6)));
+      }
+    }
+  });
+}
+
+/* ===== Audio Beep ===== */
+let audioCtx = null;
+function playBeep() {
+  try {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.frequency.value = 800;
+    osc.type = 'sine';
+    gain.gain.setValueAtTime(0, audioCtx.currentTime);
+    gain.gain.linearRampToValueAtTime(0.3, audioCtx.currentTime + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.5);
+    osc.start(audioCtx.currentTime);
+    osc.stop(audioCtx.currentTime + 0.5);
+    // Second beep
+    setTimeout(() => {
+      const osc2 = audioCtx.createOscillator();
+      const gain2 = audioCtx.createGain();
+      osc2.connect(gain2);
+      gain2.connect(audioCtx.destination);
+      osc2.frequency.value = 1000;
+      osc2.type = 'sine';
+      gain2.gain.setValueAtTime(0, audioCtx.currentTime);
+      gain2.gain.linearRampToValueAtTime(0.3, audioCtx.currentTime + 0.01);
+      gain2.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.5);
+      osc2.start(audioCtx.currentTime);
+      osc2.stop(audioCtx.currentTime + 0.5);
+    }, 300);
+  } catch(e) { console.warn('Audio not available'); }
+}
+
+/* ===== Browser Notification ===== */
+function notifyUser(title, body) {
+  if ('Notification' in window && Notification.permission === 'granted') {
+    new Notification(title, { body, icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="80" font-size="80">🕐</text></svg>' });
+  }
+}
+if ('Notification' in window && Notification.permission === 'default') {
+  Notification.requestPermission();
+}
+
+/* ===== Modal ===== */
+function showModal(icon, title, message) {
+  document.getElementById('modalIcon').textContent = icon;
+  document.getElementById('modalTitle').textContent = title;
+  document.getElementById('modalMessage').textContent = message;
+  document.getElementById('modalOverlay').classList.add('show');
+}
+document.getElementById('modalConfirm').addEventListener('click', () => {
+  document.getElementById('modalOverlay').classList.remove('show');
+});
+document.getElementById('modalOverlay').addEventListener('click', (e) => {
+  if (e.target === e.currentTarget) e.currentTarget.classList.remove('show');
+});
+
+/* ===== Toast ===== */
+function showToast(msg) {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 2500);
+}
+
+/* ===== Schedule ===== */
+function getScheduleKey() { return 'schedule_' + todayKey(); }
+
+function addSchedule() {
+  const time = document.getElementById('schedTime').value;
+  const content = document.getElementById('schedContent').value.trim();
+  if (!content) { showToast('请输入任务内容'); return; }
+
+  const items = getData(getScheduleKey());
+  const item = { id: Date.now(), time, content, done: false, notified: false };
+  items.push(item);
+  items.sort((a, b) => a.time.localeCompare(b.time));
+  saveData(getScheduleKey(), items);
+
+  document.getElementById('schedContent').value = '';
+  renderSchedule();
+  scheduleTaskSW(item); // 预约息屏也能响的到点通知
+  showToast('任务已添加 ✓');
+}
+
+function toggleSchedule(id) {
+  const items = getData(getScheduleKey());
+  const item = items.find(i => i.id === id);
+  if (item) {
+    item.done = !item.done;
+    if (item.done) cancelTaskSW(id); // 已完成则取消未触发的通知
+    saveData(getScheduleKey(), items); renderSchedule();
+  }
+}
+
+function deleteSchedule(id) {
+  let items = getData(getScheduleKey());
+  items = items.filter(i => i.id !== id);
+  saveData(getScheduleKey(), items);
+  cancelTaskSW(id);
+  renderSchedule();
+}
+
+function renderSchedule() {
+  const items = getData(getScheduleKey());
+  const list = document.getElementById('scheduleList');
+
+  if (items.length === 0) {
+    list.innerHTML = `<div class="empty-state"><div class="empty-icon">📝</div>还没有安排，添加第一个任务开始规划你的一天</div>`;
+    return;
+  }
+
+  list.innerHTML = items.map(item => `
+    <div class="schedule-item ${item.done ? 'done' : ''}">
+      <div class="custom-checkbox ${item.done ? 'checked' : ''}" onclick="toggleSchedule(${item.id})"></div>
+      <div class="schedule-time">${item.time}</div>
+      <div class="schedule-content">${escapeHtml(item.content)}</div>
+      <button class="btn-icon" onclick="deleteSchedule(${item.id})" title="删除">✕</button>
+    </div>
+  `).join('');
+}
+
+/* ===== 今日时间安排「到时间提醒」 =====
+   页面按当前时刻轮询未完成的任务；到点（或已过且当天尚未提醒）时弹出
+   toast + 系统通知 + 弹窗，并把任务标记 notified 避免重复。息屏期间由
+   Service Worker 按各自绝对结束时间独立弹系统通知（见 scheduleTaskSW）。 */
+function checkScheduleReminders() {
+  const now = new Date();
+  const cur = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+  const items = getData(getScheduleKey());
+  const due = items.filter(it => !it.done && !it.notified && it.time <= cur);
+  if (due.length === 0) return;
+
+  due.forEach(it => { it.notified = true; cancelTaskSW(it.id); });
+  saveData(getScheduleKey(), items);
+
+  const names = due.map(it => `${it.time} ${it.content}`).join('、');
+  showToast('⏰ ' + names);
+  notifyUser('⏰ 时间安排提醒', `到时间啦：${names}`);
+  if (due.length === 1) showModal('⏰', due[0].time + ' 时间到', due[0].content);
+  else showModal('⏰', `有 ${due.length} 项安排到时间`, names);
+}
+
+function scheduleTaskSW(item) {
+  if (!item || item.done || item.notified) return;
+  const parts = String(item.time).split(':');
+  const h = Number(parts[0]); const m = Number(parts[1]);
+  if (isNaN(h) || isNaN(m)) return;
+  const d = new Date(); d.setHours(h, m, 0, 0);
+  const endAt = d.getTime();
+  if (endAt <= Date.now()) return; // 已过的不预约
+  schedulePomoSW(endAt, '⏰ 时间安排提醒', `「${item.content}」到时间啦（${item.time}）`, 'sched:' + item.id);
+}
+
+function cancelTaskSW(id) {
+  if (!('serviceWorker' in navigator)) return;
+  navigator.serviceWorker.ready.then((reg) => {
+    if (reg.active) reg.active.postMessage({ type: 'cancel', tag: 'sched:' + id });
+  }).catch(() => {});
+}
+
+function markScheduleNotified(id) {
+  const items = getData(getScheduleKey());
+  const it = items.find(i => i.id === id);
+  if (it && !it.notified) { it.notified = true; saveData(getScheduleKey(), items); renderSchedule(); }
+}
+
+function armScheduleSWAll() {
+  getData(getScheduleKey()).forEach(it => { if (!it.done && !it.notified) scheduleTaskSW(it); });
+}
+
+/* ===== Work & Study（合并为单一列表，时间改为起止日期区间） ===== */
+function getWorkKey() { return 'workstudy_' + todayKey(); }
+
+function addWorkItem() {
+  const titleEl = document.getElementById('workTitle');
+  const startEl = document.getElementById('workStart');
+  const endEl = document.getElementById('workEnd');
+
+  const title = titleEl.value.trim();
+  if (!title) { showToast('请输入任务标题'); return; }
+  if (!startEl.value) { showToast('请选择开始日期'); return; }
+
+  const items = getData(getWorkKey());
+  items.push({
+    id: Date.now(),
+    title,
+    start: startEl.value,
+    end: endEl.value || startEl.value,
+    done: false
+  });
+  saveData(getWorkKey(), items);
+
+  titleEl.value = '';
+  startEl.value = '';
+  endEl.value = '';
+  renderWorkStudy();
+  showToast('任务已添加 ✓');
+}
+
+function toggleWorkItem(id) {
+  const items = getData(getWorkKey());
+  const item = items.find(i => i.id === id);
+  if (item) { item.done = !item.done; saveData(getWorkKey(), items); renderWorkStudy(); }
+}
+
+function deleteWorkItem(id) {
+  let items = getData(getWorkKey());
+  items = items.filter(i => i.id !== id);
+  saveData(getWorkKey(), items);
+  renderWorkStudy();
+}
+
+function fmtDateRange(item) {
+  const fmt = (d) => {
+    if (!d) return '';
+    const p = d.split('-');
+    return `${parseInt(p[1], 10)}月${parseInt(p[2], 10)}日`;
+  };
+  const s = fmt(item.start);
+  const e = fmt(item.end || item.start);
+  return s === e ? s : `${s} — ${e}`;
+}
+
+function renderWorkStudy() {
+  const items = getData(getWorkKey());
+  const container = document.getElementById('workList');
+  if (items.length === 0) {
+    container.innerHTML = `<div class="empty-state"><div class="empty-icon">📋</div>还没定下目标呢，在上方写下第一个吧 ✨</div>`;
+  } else {
+    items.sort((a, b) => String(a.start).localeCompare(String(b.start)));
+    container.innerHTML = items.map(item => `
+      <div class="work-item ${item.done ? 'done' : ''}">
+        <div class="custom-checkbox ${item.done ? 'checked' : ''}" onclick="toggleWorkItem(${item.id})"></div>
+        <div class="work-item-info">
+          <div class="work-item-title">${escapeHtml(item.title)}</div>
+          <div class="work-item-meta">
+            <span>🗓️ ${fmtDateRange(item)}</span>
+          </div>
+        </div>
+        <button class="btn-icon" onclick="deleteWorkItem(${item.id})" title="删除">✕</button>
+      </div>
+    `).join('');
+  }
+  const done = items.filter(i => i.done).length;
+  const pending = items.length - done;
+  const rate = items.length > 0 ? Math.round(done / items.length * 100) : 0;
+  document.getElementById('statWorkTotal').textContent = items.length;
+  document.getElementById('statDone').textContent = done;
+  document.getElementById('statPending').textContent = pending;
+  document.getElementById('statRate').textContent = rate + '%';
+}
+
+/* ===== 打卡记录（日历每日行为） ===== */
+let calYear = new Date().getFullYear();
+let calMonth = new Date().getMonth(); // 0-based
+let calSelected = null;
+
+function getCalKey(dStr) { return 'calnote_' + dStr; }
+
+function renderCalendar() {
+  const grid = document.getElementById('calGrid');
+  const title = document.getElementById('calTitle');
+  const monthNames = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+  title.textContent = `${calYear}年 ${monthNames[calMonth]}`;
+  const first = new Date(calYear, calMonth, 1);
+  const startDay = first.getDay();
+  const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+  const todayStr = todayKey();
+  let cells = '';
+  for (let i = 0; i < startDay; i++) cells += `<span class="cal-cell empty"></span>`;
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dStr = `${calYear}-${String(calMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+    const hasNote = getData(getCalKey(dStr)).length > 0;
+    const cls = ['cal-cell'];
+    if (dStr === todayStr) cls.push('today');
+    if (dStr === calSelected) cls.push('selected');
+    if (hasNote) cls.push('has-note');
+    cells += `<span class="${cls.join(' ')}" onclick="selectCalDay('${dStr}')">${d}${hasNote ? '<i class="cal-dot"></i>' : ''}</span>`;
+  }
+  grid.innerHTML = cells;
+}
+
+function selectCalDay(dStr) {
+  calSelected = dStr;
+  const area = document.getElementById('calNoteArea');
+  const dateEl = document.getElementById('calNoteDate');
+  const input = document.getElementById('calNoteInput');
+  const p = dStr.split('-');
+  dateEl.textContent = `${p[0]}年${parseInt(p[1], 10)}月${parseInt(p[2], 10)}日 · 打卡`;
+  const saved = getData(getCalKey(dStr));
+  input.value = saved.length ? saved[0].content : '';
+  area.style.display = 'block';
+  renderCalendar();
+  area.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function saveCalNote() {
+  const input = document.getElementById('calNoteInput');
+  const content = input.value.trim();
+  if (!calSelected) return;
+  if (!content) { showToast('请输入要记录的内容'); return; }
+  saveData(getCalKey(calSelected), [{ id: Date.now(), content, time: Date.now() }]);
+  showToast('已保存 ✓');
+  renderCalendar();
+}
+
+function closeCalNote() {
+  document.getElementById('calNoteArea').style.display = 'none';
+  calSelected = null;
+  renderCalendar();
+}
+
+/* ===== Healthy Living ===== */
+/* ===== Health Reminders (self-managed task bar) ===== */
+function getReminders() { return getData('health_reminders'); }
+function saveRemindersData(arr) { saveData('health_reminders', arr); }
+
+function loadReminders() {
+  let arr = getReminders();
+  if (!arr || arr.length === 0) {
+    arr = [
+      { id: 1, time: '07:30', content: '吃顿暖暖的早餐' },
+      { id: 2, time: '12:00', content: '午餐时间到了' },
+      { id: 3, time: '18:00', content: '该吃晚餐啦' },
+      { id: 4, time: '17:00', content: '起来活动一下' }
+    ];
+    saveRemindersData(arr);
+  }
+  renderReminders();
+}
+function addReminder() {
+  const time = document.getElementById('remindTime').value;
+  const content = document.getElementById('remindContent').value.trim();
+  if (!content) { showToast('请输入提醒内容'); return; }
+  const arr = getReminders();
+  arr.push({ id: Date.now(), time, content });
+  arr.sort((a, b) => a.time.localeCompare(b.time));
+  saveRemindersData(arr);
+  document.getElementById('remindContent').value = '';
+  renderReminders();
+  showToast('提醒已添加 ✓');
+}
+function deleteReminder(id) {
+  saveRemindersData(getReminders().filter(i => i.id !== id));
+  renderReminders();
+}
+function renderReminders() {
+  const arr = getReminders();
+  const el = document.getElementById('reminderList');
+  if (!el) return;
+  if (arr.length === 0) {
+    el.innerHTML = `<div class="reminder-empty">还没有提醒，添加一条试试吧 ✨</div>`;
+    return;
+  }
+  el.innerHTML = arr.map(i => `
+    <div class="reminder-item">
+      <span class="ri-time">${escapeHtml(i.time)}</span>
+      <span class="ri-content">${escapeHtml(i.content)}</span>
+      <button class="btn-icon" onclick="deleteReminder(${i.id})">✕</button>
+    </div>`).join('');
+}
+
+/* ===== Daily Records (Diary) ===== */
+function getDiaries() { return getData('diaries'); }
+function saveDiaries(arr) { saveData('diaries', arr); }
+
+let diaryIndex = 0;
+let diaryViewMode = 'all';
+let pendingShape = 'circle';
+let editingDiaryId = null;
+let diarySelectedImg = null;
+
+/* Diary search / calendar state */
+let diaryCalYear = new Date().getFullYear();
+let diaryCalMonth = new Date().getMonth(); // 0-based
+let diaryCalSelected = ''; // 'YYYY-MM-DD' 选中的日期，空=未选
+
+function weekdayOf(dateStr) {
+  const p = dateStr.split('-');
+  if (p.length < 3) return '';
+  const d = new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2]));
+  const wd = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
+  return wd[d.getDay()];
+}
+function fmtDateLabel(dateStr) {
+  const p = dateStr.split('-');
+  return `${Number(p[1])}月${Number(p[2])}日`;
+}
+function stripHtml(html) {
+  const tmp = document.createElement('div');
+  tmp.innerHTML = html || '';
+  return (tmp.textContent || '').replace(/\s+/g, ' ').trim();
+}
+
+function renderDiaries() {
+  const diaries = getDiaries();
+  const track = document.getElementById('diaryTrack');
+  const dots = document.getElementById('diaryDots');
+  const idxEl = document.getElementById('diaryIndex');
+  const prev = document.getElementById('diaryPrev');
+  const next = document.getElementById('diaryNext');
+  const viewer = document.getElementById('diaryViewer');
+  if (!track) return;
+
+  if (diaryIndex >= diaries.length) diaryIndex = diaries.length - 1;
+  if (diaryIndex < 0) diaryIndex = 0;
+
+  if (diaries.length === 0) {
+    track.innerHTML = `<div class="diary-slide"><div class="diary-slide-empty"><div class="empty-icon">📖</div>还没有日记，点「新建日记」记录第一篇吧</div></div>`;
+    if (dots) dots.innerHTML = '';
+    if (idxEl) idxEl.textContent = '';
+    if (prev) prev.disabled = true;
+    if (next) next.disabled = true;
+    updateHealthHero();
+    return;
+  }
+
+  track.innerHTML = diaries.map(d => {
+    const body = buildDiaryBody(d.html || '', diaryViewMode);
+    return `<div class="diary-slide">
+      <div><span class="diary-slide-date">${fmtDateLabel(d.date)}</span><span class="diary-slide-week">${weekdayOf(d.date)}</span></div>
+      <div class="diary-slide-body">${body}</div>
+    </div>`;
+  }).join('');
+
+  track.style.transform = `translateX(-${diaryIndex * 100}%)`;
+
+  if (dots) dots.innerHTML = diaries.map((_, i) => `<span class="diary-dot ${i === diaryIndex ? 'active' : ''}" onclick="goDiary(${i})"></span>`).join('');
+  if (idxEl) idxEl.textContent = `第 ${diaryIndex + 1} / ${diaries.length} 篇`;
+  if (prev) prev.disabled = diaryIndex === 0;
+  if (next) next.disabled = diaryIndex === diaries.length - 1;
+
+  updateHealthHero();
+  hydrateDiaryImages();
+}
+
+function buildDiaryBody(html, mode) {
+  if (mode === 'all') return html;
+  const tmp = document.createElement('div');
+  tmp.innerHTML = html;
+  if (mode === 'text') {
+    tmp.querySelectorAll('figure').forEach(f => f.remove());
+    return tmp.innerHTML;
+  }
+  if (mode === 'img') {
+    const figs = Array.from(tmp.querySelectorAll('figure'));
+    if (figs.length === 0) return '<span style="color:var(--text-3)">这篇日记还没有图片</span>';
+    return `<div class="dimg-grid">${figs.map(f => f.outerHTML).join('')}</div>`;
+  }
+  return html;
+}
+
+function updateHealthHero() {
+  const diaries = getDiaries();
+  const today = todayKey();
+  const todayCount = diaries.filter(d => d.date === today).length;
+  let imgCount = 0;
+  const days = new Set();
+  diaries.forEach(d => {
+    days.add(d.date);
+    const tmp = document.createElement('div'); tmp.innerHTML = d.html || '';
+    imgCount += tmp.querySelectorAll('figure').length;
+  });
+  const m = document.getElementById('hStatMeal');
+  const e = document.getElementById('hStatExer');
+  const s = document.getElementById('hStatStreak');
+  if (m) m.textContent = todayCount;
+  if (e) e.textContent = imgCount;
+  if (s) s.textContent = days.size;
+}
+
+function goDiary(i) { diaryIndex = i; renderDiaries(); }
+function diaryStep(d) { diaryIndex += d; renderDiaries(); }
+function setDiaryViewMode(m) {
+  diaryViewMode = m;
+  document.querySelectorAll('#diaryViewMode .seg-btn').forEach(b => b.classList.toggle('active', b.dataset.mode === m));
+  renderDiaries();
+}
+
+/* Diary editor */
+function openEditor(dateStr, html, id) {
+  editingDiaryId = id;
+  const inp = document.getElementById('diaryDateInput');
+  inp.value = dateStr;
+  document.getElementById('diaryDateLabel').textContent = fmtDateLabel(dateStr);
+  document.getElementById('diaryWeekday').textContent = weekdayOf(dateStr);
+  const ed = document.getElementById('diaryEditor');
+  ed.innerHTML = html || '';
+  diarySelectedImg = null;
+  document.getElementById('diaryModalOverlay').classList.add('show');
+  setTimeout(() => ed.focus(), 60);
+}
+function newDiary() { openEditor(todayKey(), '', null); }
+function editCurrentDiary() {
+  const diaries = getDiaries();
+  if (diaries.length === 0) { newDiary(); return; }
+  const d = diaries[diaryIndex] || diaries[0];
+  openEditor(d.date, d.html || '', d.id);
+}
+function openDatePicker() {
+  const inp = document.getElementById('diaryDateInput');
+  if (inp.showPicker) { try { inp.showPicker(); } catch (e) { inp.focus(); } }
+  else inp.focus();
+}
+function onDiaryDateChange() {
+  const v = document.getElementById('diaryDateInput').value;
+  if (!v) return;
+  document.getElementById('diaryDateLabel').textContent = fmtDateLabel(v);
+  document.getElementById('diaryWeekday').textContent = weekdayOf(v);
+}
+function setDiaryShape(shape) {
+  pendingShape = shape;
+  document.querySelectorAll('.shape-btn').forEach(b => b.classList.toggle('active', b.dataset.shape === shape));
+  if (diarySelectedImg && diarySelectedImg.parentElement) {
+    diarySelectedImg.parentElement.className = 'dimg shape-' + shape;
+  }
+}
+function insertDiaryImage(kind) {
+  const inp = kind === 'camera' ? document.getElementById('diaryCamInput') : document.getElementById('diaryFileInput');
+  inp.value = '';
+  inp.click();
+}
+function onDiaryFilePicked(e) {
+  const file = e.target.files && e.target.files[0];
+  if (!file) return;
+  fileToDataURL(file, (dataUrl) => { insertDiaryFigure(dataUrl); });
+}
+async function insertDiaryFigure(dataUrl) {
+  const ed = document.getElementById('diaryEditor');
+  ed.focus();
+  let attrs = `src="${dataUrl}"`;
+  if (API.token && cloudUserId) {
+    const path = await uploadDiaryImage(dataUrl);
+    if (path) {
+      const signed = await signDiaryImage(path);
+      attrs = `src="${signed || ''}" data-cloud-path="${path}"`;
+    } else {
+      showToast('图片上传失败，已临时存到本机');
+    }
+  }
+  const fig = `<figure class="dimg shape-${pendingShape}"><img ${attrs} alt=""></figure><p><br></p>`;
+  if (document.execCommand) {
+    try { document.execCommand('insertHTML', false, fig); }
+    catch (err) { ed.insertAdjacentHTML('beforeend', fig); }
+  } else {
+    ed.insertAdjacentHTML('beforeend', fig);
+  }
+}
+function dataURLtoBlob(dataUrl) {
+  const parts = dataUrl.split(',');
+  const mime = (parts[0].match(/:(.*?);/) || [])[1] || 'image/jpeg';
+  const bin = atob(parts[1] || '');
+  const buf = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i);
+  return new Blob([buf], { type: mime });
+}
+async function uploadDiaryImage(dataUrl) {
+  try {
+    const res = await API.uploadImage(dataURLtoBlob(dataUrl));
+    if (res && res.path) return res.path;
+    return null;
+  } catch (e) { return null; }
+}
+async function signDiaryImage(path) {
+  // 自建后端的文件可直接访问，path 形如 "用户id/文件名"
+  if (!path) return null;
+  return '/api/files/' + path;
+}
+function fileToDataURL(file, cb) {
+  const reader = new FileReader();
+  reader.onload = () => {
+    const img = new Image();
+    img.onload = () => {
+      const maxW = 1080;
+      let w = img.width, h = img.height;
+      if (w > maxW) { h = Math.round(h * maxW / w); w = maxW; }
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      try { cb(canvas.toDataURL('image/jpeg', 0.82)); }
+      catch (err) { cb(reader.result); }
+    };
+    img.onerror = () => cb(reader.result);
+    img.src = reader.result;
+  };
+  reader.readAsDataURL(file);
+}
+function normalizeDiaryHtml(html) {
+  const tmp = document.createElement('div');
+  tmp.innerHTML = html;
+  tmp.querySelectorAll('img[data-cloud-path]').forEach(im => { im.setAttribute('src', ''); });
+  return tmp.innerHTML;
+}
+function saveDiary() {
+  const date = document.getElementById('diaryDateInput').value || todayKey();
+  const html = normalizeDiaryHtml(document.getElementById('diaryEditor').innerHTML.trim());
+  let diaries = getDiaries();
+  if (editingDiaryId == null) {
+    diaries.push({ id: Date.now(), date, html, createdAt: Date.now(), updatedAt: Date.now() });
+  } else {
+    const i = diaries.findIndex(d => d.id === editingDiaryId);
+    if (i >= 0) { diaries[i].date = date; diaries[i].html = html; diaries[i].updatedAt = Date.now(); }
+    else diaries.push({ id: editingDiaryId, date, html, createdAt: Date.now(), updatedAt: Date.now() });
+  }
+  diaries.sort((a, b) => a.date.localeCompare(b.date) || (a.createdAt || 0) - (b.createdAt || 0));
+  saveDiaries(diaries);
+  closeDiaryModal();
+  renderDiaries();
+  showToast('日记已保存 ✓');
+}
+function deleteCurrentDiary() {
+  if (editingDiaryId == null) { closeDiaryModal(); return; }
+  let diaries = getDiaries();
+  diaries = diaries.filter(d => d.id !== editingDiaryId);
+  markDiaryDeleted(editingDiaryId);
+  saveDiaries(diaries);
+  closeDiaryModal();
+  renderDiaries();
+  showToast('日记已删除');
+}
+function closeDiaryModal() {
+  document.getElementById('diaryModalOverlay').classList.remove('show');
+  editingDiaryId = null;
+  diarySelectedImg = null;
+}
+function attachDiaryEditor() {
+  const ed = document.getElementById('diaryEditor');
+  if (!ed) return;
+  ed.addEventListener('click', (e) => {
+    if (e.target && e.target.tagName === 'IMG' && e.target.parentElement && e.target.parentElement.classList.contains('dimg')) {
+      if (diarySelectedImg && diarySelectedImg.parentElement) diarySelectedImg.parentElement.classList.remove('selected');
+      diarySelectedImg = e.target;
+      e.target.parentElement.classList.add('selected');
+      const shape = (e.target.parentElement.className.match(/shape-(\w+)/) || [])[1];
+      if (shape) setDiaryShape(shape);
+    } else if (diarySelectedImg && diarySelectedImg.parentElement) {
+      diarySelectedImg.parentElement.classList.remove('selected');
+      diarySelectedImg = null;
+    }
+  });
+  // Swipe navigation
+  const viewer = document.getElementById('diaryViewer');
+  if (!viewer) return;
+  let sx = 0, sy = 0, sTime = 0;
+  viewer.addEventListener('touchstart', (e) => {
+    sx = e.touches[0].clientX; sy = e.touches[0].clientY; sTime = Date.now();
+  }, { passive: true });
+  viewer.addEventListener('touchend', (e) => {
+    const dx = e.changedTouches[0].clientX - sx;
+    const dy = e.changedTouches[0].clientY - sy;
+    const dt = Date.now() - sTime;
+    if (dt > 800) return;
+    if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) {
+      diaryStep(dx < 0 ? 1 : -1);
+    }
+  }, { passive: true });
+}
+
+/* ===== Diary Search ===== */
+function openDiarySearch() {
+  const overlay = document.getElementById('diarySearchOverlay');
+  if (!overlay) return;
+  overlay.classList.add('show');
+  document.getElementById('diarySearchQuery').value = '';
+  document.getElementById('diaryCal').style.display = 'none';
+  diaryCalSelected = '';
+  const now = new Date();
+  diaryCalYear = now.getFullYear();
+  diaryCalMonth = now.getMonth();
+  renderDiaryCal();
+  doDiarySearch();
+  setTimeout(() => document.getElementById('diarySearchQuery').focus(), 80);
+}
+function closeDiarySearch() {
+  const overlay = document.getElementById('diarySearchOverlay');
+  if (overlay) overlay.classList.remove('show');
+}
+function doDiarySearch() {
+  const q = (document.getElementById('diarySearchQuery').value || '').trim();
+  const box = document.getElementById('diarySearchResults');
+  if (!box) return;
+  let diaries = getDiaries().slice().sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+  let results = diaries;
+
+  if (q) {
+    if (diaryCalSelected) { diaryCalSelected = ''; renderDiaryCal(); }
+    const m1 = q.match(/(\d{4})\s*[年\-\/]\s*(\d{1,2})/);
+    const m2 = q.match(/^(\d{1,2})\s*月$/);
+    if (m1) {
+      const y = Number(m1[1]), m = Number(m1[2]);
+      results = diaries.filter(d => { const p = (d.date || '').split('-'); return p.length >= 2 && Number(p[0]) === y && Number(p[1]) === m; });
+    } else if (m2) {
+      const m = Number(m2[1]);
+      results = diaries.filter(d => { const p = (d.date || '').split('-'); return p.length >= 2 && Number(p[1]) === m; });
+    } else if (/^\d{1,2}$/.test(q) && Number(q) >= 1 && Number(q) <= 12) {
+      const m = Number(q);
+      results = diaries.filter(d => { const p = (d.date || '').split('-'); return p.length >= 2 && Number(p[1]) === m; });
+    } else {
+      const kw = q.toLowerCase();
+      results = diaries.filter(d => stripHtml(d.html || '').toLowerCase().includes(kw));
+    }
+  } else if (diaryCalSelected) {
+    results = diaries.filter(d => (d.date || '') === diaryCalSelected);
+  }
+
+  if (results.length === 0) {
+    box.innerHTML = '<div class="diary-search-empty">没有找到相关日记</div>';
+    return;
+  }
+  box.innerHTML = results.map(d => {
+    const text = stripHtml(d.html || '');
+    const preview = text ? text.slice(0, 60) : '（含图片记录）';
+    return `<button class="diary-search-result" onclick="openSearchResult('${d.id}')">
+      <div class="diary-search-result-date">${fmtDateLabel(d.date)} ${weekdayOf(d.date)}</div>
+      <div class="diary-search-result-text">${escapeHtml(preview)}</div>
+    </button>`;
+  }).join('');
+}
+function openSearchResult(id) {
+  const d = getDiaries().find(x => String(x.id) === String(id));
+  if (!d) return;
+  closeDiarySearch();
+  openEditor(d.date, d.html || '', d.id);
+}
+function toggleDiaryCal() {
+  const cal = document.getElementById('diaryCal');
+  if (!cal) return;
+  const show = cal.style.display === 'none';
+  cal.style.display = show ? 'block' : 'none';
+  if (show) renderDiaryCal();
+}
+function diaryCalStep(d) {
+  diaryCalMonth += d;
+  if (diaryCalMonth < 0) { diaryCalMonth = 11; diaryCalYear--; }
+  else if (diaryCalMonth > 11) { diaryCalMonth = 0; diaryCalYear++; }
+  renderDiaryCal();
+}
+function renderDiaryCal() {
+  const label = document.getElementById('diaryCalLabel');
+  const grid = document.getElementById('diaryCalGrid');
+  if (!label || !grid) return;
+  label.textContent = `${diaryCalYear}年${diaryCalMonth + 1}月`;
+  const diaries = getDiaries();
+  const hasDiaryDates = new Set(diaries.map(d => d.date));
+  const today = todayKey();
+  const first = new Date(diaryCalYear, diaryCalMonth, 1);
+  const startDow = first.getDay();
+  const daysInMonth = new Date(diaryCalYear, diaryCalMonth + 1, 0).getDate();
+  let cells = '';
+  for (let i = 0; i < startDow; i++) cells += '<span class="diary-cal-cell empty"></span>';
+  for (let d = 1; d <= daysInMonth; d++) {
+    const ds = `${diaryCalYear}-${String(diaryCalMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+    const cls = 'diary-cal-cell' +
+      (hasDiaryDates.has(ds) ? ' has-diary' : '') +
+      (ds === today ? ' today' : '') +
+      (ds === diaryCalSelected ? ' selected' : '');
+    cells += `<span class="${cls}" onclick="pickDiaryDay('${ds}')">${d}</span>`;
+  }
+  grid.innerHTML = cells;
+}
+function pickDiaryDay(ds) {
+  diaryCalSelected = (diaryCalSelected === ds) ? '' : ds;
+  document.getElementById('diarySearchQuery').value = '';
+  renderDiaryCal();
+  doDiarySearch();
+}
+
+/* ===== Helpers ===== */
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+function currentTimeStr() {
+  const now = new Date();
+  return `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+}
+
+/* ===== Health Reminders Check ===== */
+let lastReminderCheck = '';
+function checkHealthReminders() {
+  const now = new Date();
+  const currentHM = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+  if (currentHM === lastReminderCheck) return;
+
+  const reminders = getReminders();
+  let fired = false;
+  for (const r of reminders) {
+    if (r.time === currentHM) {
+      lastReminderCheck = currentHM;
+      const msg = `⏰ 健康提醒：${r.content}`;
+      showToast(msg);
+      notifyUser('健康提醒', msg);
+      fired = true;
+      break;
+    }
+  }
+  if (!fired) lastReminderCheck = currentHM;
+}
+
+/* ===== AI Hotspot Module ===== */
+const AIHOT_API = 'https://aihot.virxact.com/api/v1/items?mode=selected&window=24h&limit=20';
+// 24h 精选偏少时，用 7d 窗口补充更多条目（仍按时间倒序，最新在前）
+const AIHOT_API_7D = 'https://aihot.virxact.com/api/v1/items?mode=selected&window=7d&limit=20';
+// 直连已支持 CORS（Access-Control-Allow-Origin: *），绝大多数情况直接成功；
+// 以下仅为极端网络环境的兜底（raw 端点返回原始 JSON）
+const AIHOT_PROXIES = [
+  'https://api.allorigins.win/raw?url='
+];
+const CAT_LABELS = {
+  'ai-models': '模型', 'industry': '行业', 'tip': '技巧', 'product': '产品',
+  'research': '研究', 'policy': '政策', 'company': '公司', 'tool': '工具',
+  'agent': '智能体', 'app': '应用', 'open-source': '开源', 'finance': '融资'
+};
+
+function getCollKey() { return 'aihot_collection_' + todayKey(); }
+
+function formatBJ(iso) {
+  if (!iso) return '';
+  try {
+    return new Date(iso).toLocaleString('zh-CN', {
+      timeZone: 'Asia/Shanghai', month: '2-digit', day: '2-digit',
+      hour: '2-digit', minute: '2-digit', hour12: false
+    });
+  } catch (e) { return iso; }
+}
+
+function copyToClipboard(text) {
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    return navigator.clipboard.writeText(text);
+  }
+  return new Promise((resolve, reject) => {
+    const ta = document.createElement('textarea');
+    ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.focus(); ta.select();
+    try { document.execCommand('copy'); resolve(); } catch (e) { reject(e); }
+    document.body.removeChild(ta);
+  });
+}
+
+// AI 热点缓存：固定 key + 10 分钟 TTL。
+// 之前按「当天」缓存导致一天内永不刷新，用户看不到最新热点；改为 TTL 后过期自动重拉。
+const AIHOT_CACHE_KEY = 'aihot_news_cache';
+const AIHOT_CACHE_TTL = 10 * 60 * 1000;
+
+function fmtCacheTime(ts) {
+  const d = new Date(ts);
+  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+}
+
+// 拉取 AI 热点：缓存未过期直接复用；过期或强制刷新则重新请求，失败降级到旧缓存
+async function fetchAIHot(opts = {}) {
+  const force = !!opts.force;
+  const btn = document.getElementById('aiFetchBtn');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ 拉取中...'; }
+
+  const cached = getData(AIHOT_CACHE_KEY);
+  const fresh = cached && cached.items && cached.items.length &&
+    Date.now() - (cached.fetchedAt || 0) < AIHOT_CACHE_TTL;
+
+  // 缓存未过期且非强制刷新：直接复用，避免频繁请求
+  if (!force && fresh) {
+    window._aiNews = cached.items;
+    renderAINews(cached.items);
+    renderAIDaily(cached.items);
+    document.getElementById('aiUpdated').textContent = '已缓存 · ' + fmtCacheTime(cached.fetchedAt);
+    if (btn) { btn.disabled = false; btn.textContent = '🔄 刷新'; }
+    return;
+  }
+
+  // 过期 / 强制刷新：重新请求最新数据
+  const items = await fetchAIHotFromNet();
+  if (items && items.length) {
+    window._aiNews = items;
+    renderAINews(items);
+    renderAIDaily(items);
+    saveData(AIHOT_CACHE_KEY, { fetchedAt: Date.now(), items });
+    document.getElementById('aiUpdated').textContent = '更新于 ' + currentTimeStr();
+    if (btn) { btn.disabled = false; btn.textContent = '🔄 刷新'; }
+    return;
+  }
+
+  // 拉取失败：有旧缓存则降级展示，否则给出提示
+  if (cached && cached.items && cached.items.length) {
+    window._aiNews = cached.items;
+    renderAINews(cached.items);
+    renderAIDaily(cached.items);
+    document.getElementById('aiUpdated').textContent = '网络异常 · 显示缓存 ' + fmtCacheTime(cached.fetchedAt);
+    showToast('获取最新失败，已展示上次缓存内容');
+  } else {
+    showToast('获取失败，请检查网络后点击「刷新」重试');
+    document.getElementById('aiNewsList').innerHTML =
+      `<div class="empty-state"><div class="empty-icon">⚠️</div>获取失败，请检查网络后点击「刷新」重试</div>`;
+  }
+  if (btn) { btn.disabled = false; btn.textContent = '🔄 刷新'; }
+}
+
+// 从网络获取：优先直连（已支持 CORS），失败依次尝试代理兜底；24h 偏少时用 7d 补充
+async function fetchAIHotFromNet() {
+  // 1) 直连
+  try {
+    const items = await fetchAIHotDirect(AIHOT_API);
+    if (items && items.length) return items;
+  } catch (e) { /* 走代理兜底 */ }
+
+  // 2) 代理兜底
+  for (const p of AIHOT_PROXIES) {
+    try {
+      const ctrl = new AbortController();
+      const to = setTimeout(() => ctrl.abort(), 8000);
+      const res = await fetch(p + encodeURIComponent(AIHOT_API),
+        { headers: { 'Accept': 'application/json' }, signal: ctrl.signal });
+      clearTimeout(to);
+      if (!res.ok) continue;
+      const data = await res.json();
+      let items = data.items;
+      if (!items && data.contents) { try { items = JSON.parse(data.contents).items; } catch (e) {} }
+      if (items && items.length) return items;
+    } catch (e) { /* 尝试下一个 */ }
+  }
+  return null;
+}
+
+// 直连单个 URL 并解析 items；24h 精选 < 8 条时自动用 7d 补充去重
+async function fetchAIHotDirect(url) {
+  const ctrl = new AbortController();
+  const to = setTimeout(() => ctrl.abort(), 8000);
+  try {
+    const res = await fetch(url, { headers: { 'Accept': 'application/json' }, signal: ctrl.signal });
+    if (!res.ok) return null;
+    const data = await res.json();
+    let items = data.items || [];
+    if (items.length < 8) {
+      try {
+        const r2 = await fetch(AIHOT_API_7D, { headers: { 'Accept': 'application/json' } });
+        if (r2.ok) {
+          const d2 = await r2.json();
+          const more = (d2.items || []).filter(x => !items.some(y => y.id === x.id));
+          items = items.concat(more).slice(0, 20);
+        }
+      } catch (e) { /* 补充失败不影响主数据 */ }
+    }
+    return items.length ? items : null;
+  } finally {
+    clearTimeout(to);
+  }
+}
+
+function renderAINews(items) {
+  const list = document.getElementById('aiNewsList');
+  list.innerHTML = items.map((it, i) => {
+    const cat = CAT_LABELS[it.category] || it.category || '资讯';
+    const t = formatBJ(it.publishedAt || it.discoveredAt);
+    const timeNote = it.publishedAt ? t : t + '（收录）';
+    const src = it.source ? (it.source.name || '') : '未知来源';
+    return `<div class="ai-news-card">
+      <div class="ai-news-head">
+        <span class="ai-news-num">${i + 1}</span>
+        <a class="ai-news-title" href="${it.links.aihot}" target="_blank" rel="noopener">${escapeHtml(it.title)}</a>
+      </div>
+      <div class="ai-news-meta">
+        <span class="cat-tag">${escapeHtml(cat)}</span>
+        <span>📰 ${escapeHtml(src)}</span>
+        <span>🕐 ${timeNote}</span>
+      </div>
+      <div class="ai-news-summary">${escapeHtml(it.summary || '')}</div>
+      <div class="ai-news-actions">
+        <button class="mini-btn" onclick="copyNews(${i}, this)">📋 复制</button>
+        <button class="mini-btn" onclick="collectNews(${i})">⭐ 收藏</button>
+        ${it.links.original ? `<a class="mini-btn" href="${it.links.original}" target="_blank" rel="noopener" style="text-decoration:none">🔗 原文</a>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* ===== AI 日报：基于 AI HOT 数据生成「今日一句话 + 必读几条」，链接直达原文 ===== */
+function renderAIDaily(items) {
+  const body = document.getElementById('aiDailyBody');
+  if (!body) return;
+  if (!items || !items.length) {
+    body.innerHTML = `<div class="empty-state"><div class="empty-icon">📰</div>暂无数据，稍后自动生成</div>`;
+    return;
+  }
+  // 今日一句话：取最新一条（timelineDesc，首条最新）
+  const lead = items[0];
+  const leadLine = (lead.summary || '').replace(/\s+/g, ' ').slice(0, 80);
+  const top = items.slice(0, 5);
+  const rows = top.map((it, i) => {
+    const src = it.source ? (it.source.name || '') : '未知来源';
+    const t = formatBJ(it.publishedAt || it.discoveredAt);
+    const links = it.links || {};
+    const link = links.original || links.aihot || '#';
+    return `<div class="ai-daily-item">
+      <div class="ai-daily-item-top"><span class="ai-daily-rank">0${i + 1}</span>
+        <a href="${link}" target="_blank" rel="noopener">${escapeHtml(it.title)}</a></div>
+      <div class="sum">${escapeHtml(it.summary || '')}</div>
+      <div class="meta"><span>📰 ${escapeHtml(src)}</span><span>🕐 ${t}</span>
+        ${links.aihot ? `<a href="${links.aihot}" target="_blank" rel="noopener">AI HOT 详情 ↗</a>` : ''}</div>
+    </div>`;
+  }).join('');
+  body.innerHTML = `<div class="ai-daily-lead">💡 今日一句话：${escapeHtml(leadLine || lead.title)}</div>${rows}`;
+  const sub = document.getElementById('aiDailySub');
+  if (sub) sub.textContent = `今日 AI 大事速览 · ${fmtCacheTime(Date.now())} 更新 · 点击标题直达原文`;
+}
+
+/* ===== 热点日报：抖音热榜 + 小红书热门（示例数据占位，待接入真实数据源） ===== */
+const HOT_CACHE_KEY = 'hot_daily';
+const HOT_SAMPLE = {
+  fetchedAt: null,
+  isSample: true,
+  summary: ['AI 智能体', '具身智能', 'AI 视频生成', '消费电子', '大模型应用'],
+  douyin: [
+    { title: 'AI 数字人直播带货又火了', heat: '982.4w' },
+    { title: '大模型让打工人效率翻倍', heat: '876.1w' },
+    { title: '具身智能机器人走进生活', heat: '743.5w' },
+    { title: 'AI 生成视频冲上热搜', heat: '689.2w' },
+    { title: '国产大模型新突破', heat: '602.8w' },
+    { title: 'AI 写代码神器实测', heat: '521.7w' }
+  ],
+  xhs: [
+    { title: '打工人必备的 5 个 AI 提效工具，效率翻倍', author: '效率研究所', likes: '8.6w' },
+    { title: 'AI 一键生成 PPT，从此告别熬夜做汇报', author: '职场成长社', likes: '7.2w' },
+    { title: '用 AI 做副业月入过万的真实经历', author: '搞钱小分队', likes: '6.8w' },
+    { title: 'ChatGPT 写论文保姆级教程', author: '学霸笔记', likes: '5.9w' },
+    { title: 'AI 修图太强了，小白也能出大片', author: '摄影日记', likes: '5.3w' },
+    { title: '普通人如何抓住 AI 风口', author: '趋势观察', likes: '4.8w' }
+  ]
+};
+
+function renderHotDaily() {
+  const data = getData(HOT_CACHE_KEY);
+  const d = (data && (data.douyin || data.xhs)) ? data : HOT_SAMPLE;
+  const isSample = !data || d.isSample;
+
+  // 更新 meta
+  const meta = document.getElementById('hotUpdated');
+  if (meta) meta.textContent = isSample
+    ? '示例数据 · 待接入真实数据源'
+    : '更新于 ' + fmtCacheTime(d.fetchedAt || Date.now());
+
+  // 今日速览
+  const brief = document.getElementById('hotBrief');
+  if (brief) {
+    const tags = (d.summary || []).map(s => `<span class="hot-brief-tag">#${escapeHtml(s)}</span>`).join('');
+    brief.innerHTML = tags + `<div class="hot-brief-note">${isSample
+      ? '当前为示例占位数据：接入抖音（需 GUAIKEI_API_TOKEN）与小红书（需 REDFOX_API_KEY）后自动替换为真实热点。'
+      : '聚合自抖音热榜与小红书热门笔记，仅供内部分析参考。'}</div>`;
+  }
+
+  // 抖音热榜
+  const dy = document.getElementById('douyinHotList');
+  if (dy) {
+    dy.innerHTML = (d.douyin || []).map((it, i) => `<div class="hot-row">
+      <span class="hot-rank">${i + 1}</span>
+      <span class="hot-row-title">${escapeHtml(it.title)}</span>
+      ${it.heat ? `<span class="hot-row-heat">🔥 ${escapeHtml(String(it.heat))}</span>` : ''}
+    </div>`).join('') || `<div class="empty-state"><div class="empty-icon">🎵</div>暂无数据</div>`;
+  }
+
+  // 小红书热门
+  const xhs = document.getElementById('xhsHotList');
+  if (xhs) {
+    xhs.innerHTML = (d.xhs || []).map((it, i) => `<div class="hot-row">
+      <span class="hot-rank">${i + 1}</span>
+      <span class="hot-row-title">${escapeHtml(it.title)}</span>
+      ${it.author ? `<span class="src-tag">@${escapeHtml(it.author)}</span>` : ''}
+      ${it.likes ? `<span class="hot-row-heat">❤️ ${escapeHtml(String(it.likes))}</span>` : ''}
+    </div>`).join('') || `<div class="empty-state"><div class="empty-icon">📕</div>暂无数据</div>`;
+  }
+
+  // 底部说明
+  const attrib = document.getElementById('hotAttrib');
+  if (attrib) attrib.innerHTML = `数据来源：抖音热榜 · 小红书热门笔记${isSample ? '（当前为示例占位）' : ''} · 数据为公开资讯，引用请以原文为准`;
+}
+
+function copyNews(i, btn) {
+  const it = window._aiNews && window._aiNews[i];
+  if (!it) return;
+  const text = `【${it.title}】\n${it.summary || ''}\n来源：${it.source ? it.source.name : ''}\n链接：${it.links.aihot}`;
+  copyToClipboard(text).then(() => {
+    showToast('已复制到剪贴板 ✓');
+    if (btn) {
+      const old = btn.textContent;
+      btn.textContent = '✓ 已复制';
+      btn.classList.add('copied');
+      setTimeout(() => { btn.textContent = old; btn.classList.remove('copied'); }, 1500);
+    }
+  }).catch(() => showToast('复制失败，请手动选择文本复制'));
+}
+
+function collectNews(i) {
+  const it = window._aiNews && window._aiNews[i];
+  if (!it) return;
+  const items = getData(getCollKey());
+  items.unshift({
+    id: Date.now(), title: it.title, content: it.summary || '',
+    source: it.source ? it.source.name : '', link: it.links.aihot, time: Date.now()
+  });
+  saveData(getCollKey(), items);
+  renderCollection();
+  showToast('已收藏 ✓');
+}
+
+function addCollection() {
+  const titleEl = document.getElementById('collTitle');
+  const contentEl = document.getElementById('collContent');
+  const title = titleEl.value.trim();
+  const content = contentEl.value.trim();
+  if (!content && !title) { showToast('请输入要保存的内容'); return; }
+  const items = getData(getCollKey());
+  items.unshift({ id: Date.now(), title, content, source: '', link: '', time: Date.now() });
+  saveData(getCollKey(), items);
+  titleEl.value = '';
+  contentEl.value = '';
+  renderCollection();
+  showToast('收藏已保存 ✓');
+}
+
+function deleteCollection(id) {
+  let items = getData(getCollKey());
+  items = items.filter(i => i.id !== id);
+  saveData(getCollKey(), items);
+  renderCollection();
+}
+
+function clearCollInput() {
+  document.getElementById('collTitle').value = '';
+  document.getElementById('collContent').value = '';
+}
+
+function renderCollection() {
+  const items = getData(getCollKey());
+  const list = document.getElementById('collList');
+  if (items.length === 0) {
+    list.innerHTML = `<div class="empty-state"><div class="empty-icon">📌</div>还没有收藏哦～ 读到喜欢的资讯，点一下「收藏」就好啦</div>`;
+    return;
+  }
+  list.innerHTML = items.map(it => {
+    const d = new Date(it.time);
+    const ts = `${d.getMonth() + 1}月${d.getDate()}日 ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+    const titleHtml = it.title
+      ? `<div class="ai-collection-item-title">${escapeHtml(it.title)}</div>`
+      : `<div class="ai-collection-item-title" style="color:var(--text-3)">收藏记录</div>`;
+    const srcHtml = it.source ? ` <span style="color:var(--text-3);font-weight:400">· ${escapeHtml(it.source)}</span>` : '';
+    return `<div class="ai-collection-item">
+      <div class="ai-collection-item-head">
+        ${titleHtml}${srcHtml}
+        <span class="ai-collection-item-time">${ts}</span>
+      </div>
+      <div class="ai-collection-item-content">${escapeHtml(it.content)}</div>
+      <div style="margin-top:8px;display:flex;gap:8px;align-items:center">
+        ${it.link ? `<a class="mini-btn" href="${it.link}" target="_blank" rel="noopener" style="text-decoration:none">🔗 查看原文</a>` : ''}
+        <button class="btn-icon" onclick="deleteCollection(${it.id})" title="删除" style="margin-left:auto">✕</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* ===== Init ===== */
+function init() {
+  updateHeaderDate();
+  updateClock();
+  setInterval(updateClock, 1000);
+  setInterval(checkHealthReminders, 30000);
+  setInterval(checkScheduleReminders, 15000); // 今日时间安排到点提醒轮询
+
+  loadPomoStats();
+  updatePomoDisplay();
+
+  loadReminders();
+  renderSchedule();
+  armScheduleSWAll(); // 为当天未完成的任务预约息屏也能响的到点通知
+  renderWorkStudy();
+  renderDiaries();
+  attachDiaryEditor(); // 绑定日记编辑器图片选择与滑动切换
+
+  // 日历
+  renderCalendar();
+  document.getElementById('calPrev').addEventListener('click', () => {
+    calMonth--; if (calMonth < 0) { calMonth = 11; calYear--; } renderCalendar();
+  });
+  document.getElementById('calNext').addEventListener('click', () => {
+    calMonth++; if (calMonth > 11) { calMonth = 0; calYear++; } renderCalendar();
+  });
+
+  // AI module：加载即自动获取当日热点（自带缓存与代理回退）
+  renderCollection();
+  fetchAIHot();
+
+  // 热点日报：示例数据占位，接入真实数据源后自动替换
+  renderHotDaily();
+}
+
+init();
+
+/* ===== 云端账号与同步 ===== */
+const SYNC_EXCLUDE = /^aihot_|^cloud_deleted$/;
+
+function updateAccountUI(session) {
+  const pairs = [
+    ['accountBtn', 'accountLabel'],
+    ['accountBtnSide', 'accountLabelSide']
+  ];
+  const signed = !!(session && session.user);
+  const email = signed ? (session.user.email || '已登录') : '未登录';
+  pairs.forEach(([btnId, labelId]) => {
+    const btn = document.getElementById(btnId);
+    const label = document.getElementById(labelId);
+    if (!btn || !label) return;
+    if (signed) {
+      btn.classList.add('signed');
+      label.textContent = email;
+    } else {
+      btn.classList.remove('signed');
+      label.textContent = '未登录';
+    }
+  });
+}
+
+function updateSyncState(text) {
+  const el = document.getElementById('authSyncState');
+  if (el) el.textContent = '同步状态：' + text;
+}
+
+function markDirty() {
+  if (!API.token || !cloudUserId || cloudSyncing) return;
+  clearTimeout(syncTimer);
+  updateSyncState('有改动待同步…');
+  syncTimer = setTimeout(() => fullSync(), 1500);
+}
+
+function collectLocalKv() {
+  const kv = {};
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (!k || k.indexOf(STORAGE_PREFIX) !== 0) continue;
+      const short = k.slice(STORAGE_PREFIX.length);
+      if (short === 'diaries' || SYNC_EXCLUDE.test(short)) continue;
+      try { kv[short] = JSON.parse(localStorage.getItem(k)); } catch (e) {}
+    }
+  } catch (e) {}
+  return kv;
+}
+
+function applyLocalKv(kv) {
+  Object.keys(kv || {}).forEach(short => {
+    try { localStorage.setItem(STORAGE_PREFIX + short, JSON.stringify(kv[short])); } catch (e) {}
+  });
+}
+
+function localHasContent() {
+  const d = getData('diaries');
+  if (Array.isArray(d) && d.length) return true;
+  const kv = collectLocalKv();
+  return Object.keys(kv).some(k => {
+    const v = kv[k];
+    if (Array.isArray(v)) return v.length > 0;
+    if (v && typeof v === 'object') return Object.keys(v).length > 0;
+    return false;
+  });
+}
+
+function markDiaryDeleted(id) {
+  try {
+    const arr = JSON.parse(localStorage.getItem(STORAGE_PREFIX + 'cloud_deleted') || '[]');
+    const s = String(id);
+    if (arr.indexOf(s) < 0) arr.push(s);
+    localStorage.setItem(STORAGE_PREFIX + 'cloud_deleted', JSON.stringify(arr));
+  } catch (e) {}
+}
+function takeDeletedIds() {
+  try {
+    const arr = JSON.parse(localStorage.getItem(STORAGE_PREFIX + 'cloud_deleted') || '[]');
+    return Array.isArray(arr) ? arr : [];
+  } catch (e) { return []; }
+}
+function clearDeletedIds() {
+  try { localStorage.removeItem(STORAGE_PREFIX + 'cloud_deleted'); } catch (e) {}
+}
+
+async function syncAppState() {
+  const local = collectLocalKv();
+  const { payload } = await API.getState();
+  const remote = payload || {};
+  const merged = Object.assign({}, remote, local);
+  applyLocalKv(merged);
+  await API.putState(merged);
+}
+
+async function syncDiaries() {
+  const { diaries: remote } = await API.getDiaries();
+  const rows = remote || [];
+  const local = getDiaries();
+  const localMap = new Map();
+  local.forEach(d => localMap.set(String(d.id), d));
+
+  const delIds = takeDeletedIds();
+  if (delIds.length) {
+    for (const r of rows.filter(x => delIds.indexOf(x.client_id) >= 0)) {
+      await API.deleteDiaryById(r.id);
+    }
+    clearDeletedIds();
+  }
+
+  const remoteMap = new Map();
+  rows.forEach(r => remoteMap.set(r.client_id, r));
+  for (const d of local) {
+    const cid = String(d.id);
+    const r = remoteMap.get(cid);
+    const lu = Number(d.updatedAt || d.createdAt || 0);
+    const ru = r ? new Date(r.updated_at).getTime() : 0;
+    const payload = { date: d.date, html: d.html, updated_at: new Date(lu || Date.now()).toISOString() };
+    if (!r) {
+      await API.upsertDiary(cid, payload);
+    } else if (lu > ru + 1000) {
+      await API.upsertDiary(cid, payload);
+    }
+  }
+
+  let changed = false;
+  const merged = local.slice();
+  for (const r of rows) {
+    if (delIds.indexOf(r.client_id) >= 0) continue;
+    const ru = new Date(r.updated_at).getTime();
+    const l = localMap.get(r.client_id);
+    if (!l) {
+      merged.push({ id: r.client_id, date: r.date, html: r.html, createdAt: ru, updatedAt: ru });
+      changed = true;
+    } else {
+      const lu = Number(l.updatedAt || l.createdAt || 0);
+      if (ru > lu + 1000) {
+        const idx = merged.findIndex(x => String(x.id) === r.client_id);
+        if (idx >= 0) { merged[idx].date = r.date; merged[idx].html = r.html; merged[idx].updatedAt = ru; changed = true; }
+      }
+    }
+  }
+  if (changed) {
+    merged.sort((a, b) => String(a.date).localeCompare(String(b.date)) || (a.createdAt || 0) - (b.createdAt || 0));
+    localStorage.setItem(STORAGE_PREFIX + 'diaries', JSON.stringify(merged));
+    renderDiaries();
+  }
+}
+
+async function fullSync() {
+  if (!API.token || !cloudUserId || cloudSyncing) return;
+  cloudSyncing = true;
+  updateSyncState('同步中…');
+  try {
+    await syncAppState();
+    await syncDiaries();
+    updateSyncState('已同步 · ' + new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' }));
+  } catch (e) {
+    updateSyncState('同步失败，稍后自动重试');
+  } finally {
+    cloudSyncing = false;
+  }
+}
+
+function refreshViews() {
+  try { loadPomoStats(); } catch (e) {}
+  try { renderSchedule(); } catch (e) {}
+  try { renderWorkStudy(); } catch (e) {}
+  try { renderReminders(); } catch (e) {}
+  try { renderDiaries(); } catch (e) {}
+  try { renderDiaryCal(); } catch (e) {}
+}
+
+let pendingConflict = null;
+
+async function bootSync() {
+  let s, d;
+  try {
+    s = await API.getState();
+    d = await API.getDiaries();
+  } catch (e) { updateSyncState('云端读取失败'); return; }
+  const statePayload = s.payload || null;
+  const diaryRows = d.diaries || [];
+  const cloudHas = statePayload || diaryRows.length;
+  if (!cloudHas || !localHasContent()) {
+    await fullSync();
+    refreshViews();
+    return;
+  }
+  pendingConflict = { statePayload, diaryRows };
+  document.getElementById('syncNote').textContent =
+    '这个账号的云端已有数据，本机也有数据。请选择保留哪一份，另一份会被覆盖。';
+  document.getElementById('syncCloudDesc').textContent = `云端：${pendingConflict.diaryRows.length} 篇日记 + 目标与提醒设置`;
+  document.getElementById('syncLocalDesc').textContent = `本机：${getDiaries().length} 篇日记 + 目标与提醒设置`;
+  document.getElementById('syncOverlay').classList.add('show');
+}
+
+async function resolveConflict(choice) {
+  const c = pendingConflict;
+  document.getElementById('syncOverlay').classList.remove('show');
+  if (!c) return;
+  cloudSyncing = true;
+  updateSyncState('同步中…');
+  try {
+    if (choice === 'cloud') {
+      if (c.statePayload) applyLocalKv(c.statePayload);
+      const list = c.diaryRows.map(r => ({
+        id: r.client_id, date: r.date, html: r.html,
+        createdAt: new Date(r.updated_at).getTime(), updatedAt: new Date(r.updated_at).getTime()
+      }));
+      list.sort((a, b) => String(a.date).localeCompare(String(b.date)));
+      localStorage.setItem(STORAGE_PREFIX + 'diaries', JSON.stringify(list));
+      clearDeletedIds();
+      refreshViews();
+      showToast('已切换到云端数据 ✓');
+    } else {
+      for (const r of c.diaryRows) {
+        await API.deleteDiaryById(r.id);
+      }
+      const local = getDiaries();
+      for (const d2 of local) {
+        await API.upsertDiary(String(d2.id), {
+          date: d2.date, html: d2.html,
+          updated_at: new Date(d2.updatedAt || d2.createdAt || Date.now()).toISOString()
+        });
+      }
+      await API.putState(collectLocalKv());
+      showToast('已把本机数据上传到云端 ✓');
+    }
+    await fullSync();
+  } catch (e) {
+    updateSyncState('同步失败，稍后自动重试');
+  } finally {
+    cloudSyncing = false;
+  }
+}
+
+async function hydrateDiaryImages() {
+  if (!API.token || !cloudUserId) return;
+  const root = document.getElementById('diaryTrack');
+  if (!root) return;
+  const imgs = Array.from(root.querySelectorAll('img[data-cloud-path]')).filter(im => !im.getAttribute('src'));
+  for (const im of imgs) {
+    const url = await signDiaryImage(im.dataset.cloudPath);
+    if (url) im.setAttribute('src', url);
+  }
+}
+
+/* ===== 登录 / 注册 UI ===== */
+let authTab = 'password';
+let pendingOtp = null;
+let resetChallenge = null;
+
+function openAuthModal() {
+  const ov = document.getElementById('authOverlay');
+  const forms = document.getElementById('authForms');
+  const signed = document.getElementById('authSigned');
+  if (!ov) return;
+  if (cloudSession) {
+    forms.style.display = 'none';
+    signed.style.display = 'block';
+    const em = document.getElementById('authUserEmail');
+    if (em) em.textContent = (cloudSession.user && cloudSession.user.email) || '已登录';
+    updateSyncState(cloudSyncing ? '同步中…' : '已同步');
+  } else {
+    forms.style.display = 'block';
+    signed.style.display = 'none';
+    switchAuthTab('password');
+  }
+  ov.classList.add('show');
+}
+
+function closeAuthModal() {
+  const ov = document.getElementById('authOverlay');
+  if (ov) ov.classList.remove('show');
+}
+
+function switchAuthTab(tab) {
+  authTab = tab;
+  document.querySelectorAll('.auth-tab').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+  const pwd = document.getElementById('authPwdField');
+  const code = document.getElementById('authCodeField');
+  const submit = document.getElementById('authSubmit');
+  const forgot = document.getElementById('authForgot');
+  const title = document.getElementById('authTitle');
+  const pwdInput = document.getElementById('authPassword');
+  if (tab === 'password') {
+    pwd.style.display = ''; code.style.display = 'none'; submit.textContent = '登录'; forgot.style.display = '';
+    pwdInput.placeholder = '密码（至少 6 位）'; title.textContent = '登录咕嘎管家';
+  } else if (tab === 'code') {
+    pwd.style.display = 'none'; code.style.display = ''; submit.textContent = '登录 / 注册'; forgot.style.display = '';
+    title.textContent = '验证码登录';
+  } else if (tab === 'signup') {
+    pwd.style.display = ''; code.style.display = 'none'; submit.textContent = '注册'; forgot.style.display = 'none';
+    pwdInput.placeholder = '设置密码（至少 6 位）'; title.textContent = '注册新账号';
+  } else {
+    pwd.style.display = ''; code.style.display = ''; submit.textContent = '确认重置密码'; forgot.style.display = 'none';
+    pwdInput.placeholder = '设置新密码（至少 6 位）'; title.textContent = '重置密码';
+  }
+  authMsg('');
+}
+
+function authMsg(text, isErr) {
+  const el = document.getElementById('authMsg');
+  if (!el) return;
+  el.textContent = text || '';
+  el.className = 'auth-msg' + (isErr ? ' err' : '');
+}
+
+function getAuthEmail() {
+  const el = document.getElementById('authEmail');
+  return (el && el.value || '').trim();
+}
+
+async function sendAuthCode() {
+  const email = getAuthEmail();
+  if (!email) return authMsg('请先输入邮箱', true);
+  const btn = document.getElementById('authSendCode');
+  btn.disabled = true; btn.textContent = '发送中…';
+  try {
+    if (authTab === 'forgot') {
+      await API.resetPassword(email);
+      resetChallenge = { email };
+      authMsg('重置验证码已发送，请查收邮件');
+    } else {
+      await API.sendOtp(email);
+      pendingOtp = { email };
+      authMsg('验证码已发送，请查收邮件');
+    }
+    btn.disabled = false; btn.textContent = '重新获取';
+  } catch (e) {
+    btn.disabled = false; btn.textContent = '重新获取';
+    authMsg(e.message || '发送失败，请稍后重试', true);
+  }
+}
+
+async function submitAuth() {
+  const email = getAuthEmail();
+  const password = (document.getElementById('authPassword').value || '').trim();
+  const code = (document.getElementById('authCode').value || '').trim();
+  const btn = document.getElementById('authSubmit');
+  if (!email) return authMsg('请输入邮箱', true);
+  btn.disabled = true;
+  try {
+    let r = null;
+    if (authTab === 'password') {
+      if (!password) { btn.disabled = false; return authMsg('请输入密码', true); }
+      r = await API.login(email, password);
+    } else if (authTab === 'signup') {
+      if (!password) { btn.disabled = false; return authMsg('请设置密码', true); }
+      r = await API.register(email, password);
+    } else if (authTab === 'forgot') {
+      if (!code || !password) { btn.disabled = false; return authMsg('请填写验证码和新密码', true); }
+      r = await API.resetPasswordConfirm(email, code, password);
+    } else {
+      if (!code) { btn.disabled = false; return authMsg('请输入验证码', true); }
+      r = await API.verifyOtp(email, code);
+    }
+    API.setToken(r.token);
+    cloudUserId = r.user ? r.user.id : null;
+    cloudSession = { user: { id: r.user.id, email: r.user.email } };
+    pendingOtp = null; resetChallenge = null;
+    updateAccountUI(cloudSession);
+    closeAuthModal();
+    showToast('登录成功 ✓');
+    await bootSync();
+  } catch (e) {
+    authMsg(e.message || '操作失败，请稍后重试', true);
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+async function signOutCloud() {
+  try { await API.logout(); } catch (e) {}
+  API.setToken(null);
+  cloudSession = null; cloudUserId = null;
+  clearTimeout(syncTimer);
+  updateAccountUI(null);
+  closeAuthModal();
+  showToast('已退出登录，数据保留在本机');
+}
+
+/* ===== 启动会话 ===== */
+async function initCloud() {
+  API._loadToken();
+  if (!API.token) { updateAccountUI(null); return; }
+  try {
+    const { user } = await API.me();
+    cloudSession = { user };
+    cloudUserId = user ? user.id : null;
+    updateAccountUI(cloudSession);
+    if (!cloudSession) { API.setToken(null); return; }
+    await bootSync();
+    setInterval(() => { if (cloudUserId && !document.hidden) fullSync(); }, 60000);
+    document.addEventListener('visibilitychange', () => {
+      if (!cloudUserId) return;
+      if (document.hidden) { clearTimeout(syncTimer); fullSync(); }
+      else fullSync();
+    });
+  } catch (e) {
+    // token 失效则清除并回到未登录态
+    API.setToken(null);
+    cloudSession = null; cloudUserId = null;
+    updateAccountUI(null);
+  }
+}
+
+initCloud();
+
+/* ===== PWA Service Worker ===== */
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(err => {
+      console.warn('SW registration failed:', err);
+    });
+  });
+}
+
+</script>
+</body>
+</html>
