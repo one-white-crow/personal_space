@@ -109,7 +109,15 @@ jobs:
             # 3) 只重启有变化的服务：--no-build 使用拉取的镜像；db/nginx 未变则保持运行
             docker compose up -d --no-build --remove-orphans
 
+            # 3.5) nginx.conf 是 bind mount，容器不会被重建，必须主动校验并 reload 才能生效
+            docker compose exec -T nginx nginx -t
+            docker compose exec -T nginx nginx -s reload
+
             # 4) 清理悬空镜像（清理失败不影响部署结果，避免 prune 并发冲突导致 job 失败）
             docker image prune -f || true
+
+            # 5) 冒烟检查：后端健康接口必须返回 ok
+            sleep 2
+            curl -fsS http://localhost/api/health && echo " ← 健康检查通过"
 
             echo "✅ 部署完成"
