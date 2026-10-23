@@ -200,4 +200,28 @@ npm run dev         # 启动，默认 3000 端口
 
 - 日记图片：登录后上传到服务器磁盘（`uploads/` 卷），正文只存 `data-cloud-path`；未登录则 base64 内嵌本机。
 - AI 热点资讯：直连公开 API（aihot.virxact.com），不依赖后端。
-- 热点日报：抖音/小红书数据需另配 API key（当前为示例占位）。
+- 热点日报：后端 `/api/hot` 代理 `hot.baiwumm.com`（免 key），内存缓存 10 分钟，多源回退；前端 `loadHotDaily()` 取数，点击标题跳原文。
+
+## 个人简历子站（me.hongshenyu.dpdns.org）
+
+同一台服务器、同一个 nginx 容器、同一条 Cloudflare 隧道，靠 **Host 头**区分站点：
+
+| 站点 | 域名 | 根目录 |
+|---|---|---|
+| 工作台 | `hongshenyu.dpdns.org` | 仓库根目录（挂载到 `/usr/share/nginx/html`） |
+| 简历 / 作品集 | `me.hongshenyu.dpdns.org` | 宿主机 `/opt/portfolio`（挂载到 `/srv/portfolio`） |
+
+- 简历产物放在 **仓库目录之外**，因此 CI 的 `rsync --delete` 不会误删，也不会在主域名下暴露 `/portfolio` 路径。
+- 路由由 `nginx.conf` 里独立的 `server` 块承载（`server_name me.hongshenyu.dpdns.org`）。
+- Cloudflare 侧需要在隧道的 Routes 里为 `me` 增加一条 Published application（子域 `me`、路径留空、服务 `http://localhost:80`），DNS 记录会自动生成。
+
+更新简历（在简历项目目录执行，构建后直接覆盖服务器目录）：
+
+```bash
+npm run build
+tar czf - -C dist . | ssh -i ~/.ssh/deploy_guga root@134.175.113.242 \
+  "rm -rf /opt/portfolio && mkdir -p /opt/portfolio && tar xzf - -C /opt/portfolio"
+```
+
+> 该站是纯静态产物，更新文件即可生效，不用重启容器，也不走 CI。
+
