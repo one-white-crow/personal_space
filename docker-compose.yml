@@ -50,6 +50,9 @@ services:
       - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
       # 前端静态文件（index.html / sw.js / manifest / icons）
       - .:/usr/share/nginx/html:ro
+      # 个人简历 / 作品集（独立子域名，放在仓库目录之外，
+      # 这样 CI 的 rsync --delete 不会碰到它，也避免在主域名下暴露 /portfolio 路径）
+      - /opt/portfolio:/srv/portfolio:ro
     depends_on:
       - backend
 
